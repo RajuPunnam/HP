@@ -1,0 +1,4 @@
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://hybris.techouts.com:3306/venkattest
+jdbc.username=root
+jdbc.password=techouts

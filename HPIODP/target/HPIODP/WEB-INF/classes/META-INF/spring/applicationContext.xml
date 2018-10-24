@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.5.xsd">
+
+	<context:component-scan base-package="com.io" />
+	<context:component-scan base-package="com.inventory.service" />
+	<context:component-scan base-package="com.io.services.po"/>
+	<context:component-scan base-package="com.inventory.dao" />
+	<context:component-scan base-package="com.mongo.mysql.dao"/>
+	<context:component-scan base-package="com.mongo.mysql.service"/>
+	<context:component-scan base-package="com.mongo.mysql.threads"/>
+	<context:component-scan base-package="com.mysql.mysql.service"/>
+	<context:component-scan base-package="com.mysql.mysql.dao"/>
+	
+	<context:annotation-config/>
+    
+<bean id="hibernate3AnnotatedSessionFactory"
+	class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+    <property name="dataSource">
+      <ref bean="dataSource"/>
+    </property>
+
+    <property name="hibernateProperties">
+       <props>
+         <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+         <prop key="hibernate.show_sql">false</prop>
+            
+            <prop key="connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</prop> 
+            <prop key="hibernate.c3p0.min_size">10 </prop>
+            <prop key="hibernate.c3p0.max_size">20 </prop>
+            <prop key="hibernate.c3p0.timeout">0 </prop>
+            <prop key="hibernate.c3p0.max_statements">0 </prop>
+            <prop key="hibernate.c3p0.idle_test_period">14400 </prop>
+            <prop key="hibernate.c3p0.acquire_increment">1</prop>
+            <prop key="c3p0.preferredTestQuery">select 1;</prop>
+            <prop key="hibernate.jdbc.batch_size">100</prop>  
+            <prop key="hibernate.order_inserts">true</prop>  
+            <prop key="hibernate.order_updates">true</prop> 
+       </props>
+    </property>
+      
+       <property name="annotatedClasses">
+			<list>
+				<value>com.mongo.mysql.pojos.Clean</value>
+				<value>com.mongo.mysql.pojos.OpenOrdersRaw</value>
+				<value>com.mongo.mysql.pojos.OpenOrders_SkuAvPn</value>
+				<value>com.mongo.mysql.pojos.ShipmentsToHpPojo</value>
+				<value>com.mongo.mysql.pojos.InvPNConversion</value>
+				<value>com.mongo.mysql.pojos.DOI</value>
+				<value>com.mongo.mysql.pojos.DOI_IO</value>
+				<value>com.mongo.mysql.pojos.Openorders_Org_Po_Shortage</value>
+				<value>com.mongo.mysql.pojos.Consumption_tbl</value>
+				<value>com.mongo.mysql.pojos.Consumption_tbl_MySql</value>
+				<value>com.mongo.mysql.pojos.SkuToAvToPnPojo</value>
+				<value>com.mongo.mysql.pojos.MASTER_BOM_FLEX</value>
+				<value>com.mongo.mysql.pojos.MASTERSKUAVBOM_PA</value>
+				<value>com.mongo.mysql.pojos.MASTERAV_PN_BOM_V11</value>
+				<value>com.mongo.mysql.pojos.MASTERSKUAVBOM</value>
+				<value>com.mongo.mysql.pojos.PRI_ALT_PN_LIST</value>
+				<value>com.mongo.mysql.pojos.PA_FLEX_SUPER_BOM</value>
+				
+				<value>com.mongo.mysql.pojos.Resumo</value>
+				<value>com.mongo.mysql.pojos.Demand_30Days</value>
+				<value>com.mongo.mysql.pojos.Shortage_detail_report</value>
+				<value>com.mongo.mysql.pojos.FTPFile_Status_Sosa_Shortage</value>
+			</list>
+	   </property>
+
+ </bean>
+
+<bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" id="dataSource">
+<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+<property name="url" value="jdbc:mysql://192.168.1.81:3306/hpcleverplan"/>
+<property name="username" value="root"/>
+<property name="password" value="techouts"/>
+
+</bean>
+
+<!-- connection of second schema -->
+
+<bean id="hibernate3AnnotatedSessionFactoryProduction"
+	class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+    <property name="dataSource">
+      <ref bean="dataSourceProduction"/>
+    </property>
+
+    <property name="hibernateProperties">
+       <props>
+         <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+         <prop key="hibernate.show_sql">false</prop> 
+         
+            <prop key="connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</prop> 
+            <prop key="hibernate.c3p0.min_size">10 </prop>
+            <prop key="hibernate.c3p0.max_size">20 </prop>
+            <prop key="hibernate.c3p0.timeout">0</prop>
+            <prop key="hibernate.c3p0.max_statements">0 </prop>
+            <prop key="hibernate.c3p0.idle_test_period">14400 </prop>
+            <prop key="hibernate.c3p0.acquire_increment">1</prop>
+            <prop key="c3p0.preferredTestQuery">select 1;</prop>
+            <prop key="hibernate.jdbc.batch_size">100</prop>  
+            <prop key="hibernate.order_inserts">true</prop>  
+            <prop key="hibernate.order_updates">true</prop> 
+       </props>
+    </property>
+      
+       <property name="annotatedClasses">
+			<list>
+				<value>com.mongo.mysql.pojos.Clean</value>
+				<value>com.mongo.mysql.pojos.OpenOrdersRaw</value>
+				<value>com.mongo.mysql.pojos.OpenOrders_SkuAvPn</value>
+				<value>com.mongo.mysql.pojos.ShipmentsToHpPojo</value>
+				<value>com.mongo.mysql.pojos.InvPNConversion</value>
+				<value>com.mongo.mysql.pojos.DOI</value>
+				<value>com.mongo.mysql.pojos.DOI_IO</value>
+				<value>com.mongo.mysql.pojos.Openorders_Org_Po_Shortage</value>
+				<value>com.mongo.mysql.pojos.Consumption_tbl</value>
+				<value>com.mongo.mysql.pojos.Consumption_tbl_MySql</value>
+				
+				<value>com.mongo.mysql.pojos.SkuToAvToPnPojo</value>
+				<value>com.mongo.mysql.pojos.MASTER_BOM_FLEX</value>
+				<value>com.mongo.mysql.pojos.MASTERSKUAVBOM_PA</value>
+				<value>com.mongo.mysql.pojos.MASTERAV_PN_BOM_V11</value>
+				<value>com.mongo.mysql.pojos.MASTERSKUAVBOM</value>
+				<value>com.mongo.mysql.pojos.PRI_ALT_PN_LIST</value>
+				<value>com.mongo.mysql.pojos.PA_FLEX_SUPER_BOM</value>
+			</list>
+	   </property>
+ </bean>
+<bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" id="dataSourceProduction">
+<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+<property name="url" value="jdbc:mysql://192.168.1.81:3306/venkatproduction"/>
+<property name="username" value="root"/>
+<property name="password" value="techouts"/>
+</bean>
+		
+<mongo:mongo host="192.168.1.3" port="27017" id="mongo" >
+ <mongo:options connections-per-host="1" threads-allowed-to-block-for-connection-multiplier="15"/>
+                   
+                   <!-- <mongo:options    connections-per-host="4"
+                   threads-allowed-to-block-for-connection-multiplier="4"
+                   connect-timeout="0"
+                   max-wait-time="18000"
+                   auto-connect-retry="true"
+                   socket-keep-alive="true"
+                   socket-timeout="0"/> -->
+ </mongo:mongo>
+	<mongo:db-factory dbname="HPCPSTG" mongo-ref="mongo"
+		id="mongoDbFactory" />
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
+	</bean>
+
+</beans>
