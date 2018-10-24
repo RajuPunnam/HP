@@ -1,0 +1,74 @@
+package com.techouts.dao;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.techouts.pojo.PcOpenorders;
+
+@Repository
+public class PcOpenOrdersDao {
+
+	private static final Logger LOGGER = Logger
+			.getLogger(PcOpenOrdersDao.class);
+	@Autowired
+	private MongoTemplate mongoTemplate;
+
+	public boolean getInsertOpenOrdersData(List<PcOpenorders> openordersList) {
+		boolean uploadStatus;
+		try {
+
+			mongoTemplate.insert(openordersList, "NEW_OPEN_ORDERS");
+			uploadStatus = true;
+		} catch (Exception exception) {
+			LOGGER.error(exception.getMessage());
+			uploadStatus = false;
+		}
+		return uploadStatus;
+	}
+
+	public boolean generateOpenordersLatest(
+			List<PcOpenorders> latestOpenordersList) {
+		Date latestOpenOrdersDate = null;
+		boolean uploadStatus = false;
+		try {
+			latestOpenOrdersDate = new SimpleDateFormat("MM-dd-yyyy")
+					.parse(latestOpenordersList.get(1).getDate());
+			if (mongoTemplate.getCollection("NEWOPNORDERS_LATEST").count()>0) 
+			{
+				Object fileDate=mongoTemplate.getCollection("NEWOPNORDERS_LATEST").findOne().get("Date");
+				Date oldOrdersDate = new SimpleDateFormat("MM-dd-yyyy")
+						.parse(String.valueOf(fileDate));
+				if (oldOrdersDate.before(latestOpenOrdersDate)) 
+				{
+					mongoTemplate.dropCollection("NEWOPNORDERS_LATEST");
+					mongoTemplate.insert(latestOpenordersList,
+							"NEWOPNORDERS_LATEST");
+					uploadStatus = true;
+				}
+				else
+				{
+					uploadStatus = false;
+				}
+			} else {
+				mongoTemplate.insert(latestOpenordersList,
+						"NEWOPNORDERS_LATEST");
+				uploadStatus = true;
+			}
+		} catch (Exception exception) {
+			LOGGER.error(exception.getMessage());
+		}
+		return uploadStatus;
+	}
+
+	public List<String> getAllDatesFromOpenorders() {
+		return mongoTemplate.getCollection("NEW_OPEN_ORDERS")
+				.distinct("Date");
+	}
+
+}

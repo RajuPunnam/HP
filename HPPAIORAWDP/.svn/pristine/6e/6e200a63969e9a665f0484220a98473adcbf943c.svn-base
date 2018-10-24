@@ -1,0 +1,369 @@
+package com.techouts.service;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.techouts.dao.FtpDao;
+import com.techouts.dao.PcOpenOrdersDao;
+import com.techouts.pojo.FileUploadInfo;
+import com.techouts.pojo.PcOpenorders;
+import com.techouts.pojo.ReportSummary;
+
+@Service
+public class PcOpenOrdersService {
+	Logger logger = Logger.getLogger(PcOpenOrdersService.class);
+	@Autowired
+	private PcOpenOrdersDao openOrdersDao;
+	@Autowired
+	private FtpDao ftpDao;
+	@Autowired
+	private FtpMail ftpMail;
+	private SimpleDateFormat requiredDateFormat = new SimpleDateFormat(
+			"MM-dd-yyyy");
+	private SimpleDateFormat existedFormat = new SimpleDateFormat("dd/MM/yyyy");
+
+	private final String OPEN_ORDER_HEADERS[] = { "CIA", "Buyer",
+			"Item Number", "Description", "PO Date", "PO #", "Line", "PO/Line",
+			"PO STATUS", "Request Ship Date", "Confirmed Ship Date",
+			"ETA (Flex)", "Open Qty", "Supplier", "Invoice# BaaN", "Where used" };
+
+	public FileUploadInfo getUploadOpenOrderscsvData(File inputLocation, FTPFile file,
+			Properties properties) {
+		CSVParser csvFileParser = null;
+		List<PcOpenorders> openordersList = null;
+		boolean uploadStatus = false;
+		String fileDate = null;
+		FileUploadInfo fileUploadInfo=new FileUploadInfo();
+		// Create the CSVFormat object with the header mapping
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withFirstRecordAsHeader()
+				.withDelimiter(';').withAllowMissingColumnNames(true);
+		fileDate = getOpenOrdersFileDate(file);
+		try {
+			csvFileParser = new CSVParser(new FileReader(inputLocation
+					+ File.separator + file.getName()), csvFileFormat);
+			if (findHeader(csvFileParser.getHeaderMap()) <= OPEN_ORDER_HEADERS.length/2) 
+			{
+				csvFileFormat = null;
+				csvFileFormat = CSVFormat.DEFAULT
+						.withHeader(OPEN_ORDER_HEADERS).withDelimiter(';')
+						.withAllowMissingColumnNames().withIgnoreEmptyLines();
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + file.getName()), csvFileFormat);
+			}
+		} catch (IllegalArgumentException illegalArgumentException) {  
+			illegalArgumentException.printStackTrace();
+			csvFileFormat = null;
+			csvFileFormat = CSVFormat.DEFAULT.withHeader(OPEN_ORDER_HEADERS)
+					.withDelimiter(';').withAllowMissingColumnNames()
+					.withIgnoreEmptyLines();
+			try {
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + file.getName()), csvFileFormat);
+			} catch (FileNotFoundException fileNotFoundException) {
+				logger.error(fileNotFoundException.getMessage());
+
+			} catch (IOException ioException) {
+				logger.error(ioException.getMessage());
+			}
+		} catch (Exception exception) {
+			logger.error(exception.getMessage());
+		}
+		try {
+			
+			List<CSVRecord> csvRecordsList = csvFileParser.getRecords();
+			if (csvRecordsList != null && csvRecordsList.size() > 0) {
+				openordersList = new ArrayList<PcOpenorders>();
+				for (int i = 0; i < csvRecordsList.size(); i++) {
+					PcOpenorders openOrdersDto = new PcOpenorders();
+					CSVRecord csvRecord = (CSVRecord) csvRecordsList.get(i);
+					openOrdersDto.setDate(fileDate);
+					if (csvRecord.isMapped("CIA")) {
+						if (csvRecord.isSet("CIA")) {
+							String CIA = csvRecord.get("CIA");
+							openOrdersDto.setCIA(CIA.trim());
+						}
+					}
+					if (csvRecord.isMapped("Buyer")) {
+						if (csvRecord.isSet("Buyer")) {
+							String BUYER = csvRecord.get("Buyer");
+							openOrdersDto.setBuyer(BUYER.trim());
+						}
+					}
+					if (csvRecord.isMapped("Item Number")) {
+						if (csvRecord.isSet("Item Number")) {
+							String item = csvRecord.get("Item Number");
+							openOrdersDto.setItem(item.trim());
+						}
+					}
+					if (csvRecord.isMapped("Description")) {
+						if (csvRecord.isSet("Description")) {
+							String description = csvRecord
+									.get("Description");
+							openOrdersDto.setDescription(description.trim());
+						}
+					}
+					if (csvRecord.isMapped("PO Date")) {
+						if (csvRecord.isSet("PO Date")) {
+							String poDate = csvRecord
+									.get("PO Date");
+							if (poDate != null) {
+								poDate = poDate.replaceAll("[',',' ','.']", "").trim();
+								if (!poDate.equals("")
+										&& poDate.matches("^[0-9/]*$*")) {
+									openOrdersDto
+											.setPODate(requiredDateFormat
+													.format(existedFormat
+															.parse(poDate)));
+								}
+							}
+						}
+					}
+					if (csvRecord.isMapped("PO #")) {
+						if (csvRecord.isSet("PO #")) {
+							String po = csvRecord.get("PO #");
+							openOrdersDto.setPO(po.trim());
+						}
+					}
+					if (csvRecord.isMapped("Line")) {
+						if (csvRecord.isSet("Line")) {
+							String LINE = csvRecord.get("Line");
+							int line = 0;
+							if (LINE != null) {
+								LINE = LINE.trim().replaceAll("[',',' ','.']", "");
+								if (!LINE.equals("")
+										&& LINE.matches("^[0-9]*$*")) {
+									line = Integer.valueOf(LINE);
+								}
+							}
+							openOrdersDto.setLine(line);
+						}
+					}
+					
+					if (csvRecord.isMapped("PO/Line")) {
+						if (csvRecord.isSet("PO/Line")) {
+							String po_Line = csvRecord
+									.get("PO/Line");
+							openOrdersDto.setPO_Line(po_Line.trim());
+						}
+					}
+					if (csvRecord.isMapped("PO STATUS")) {
+						if (csvRecord.isSet("PO STATUS")) {
+							String po_Status = csvRecord
+									.get("PO STATUS");
+							openOrdersDto.setPO_STATUS(po_Status.trim());
+						}
+					}
+					if (csvRecord.isMapped("Request Ship Date")) {
+						if (csvRecord.isSet("Request Ship Date")) {
+							String requestShipDate = csvRecord
+									.get("Request Ship Date");
+							if (requestShipDate != null) {
+								requestShipDate = requestShipDate.trim()
+										.replaceAll("[',',' ','.']", "");
+								if (!requestShipDate.equals("")
+										&& requestShipDate
+												.matches("^[0-9/]*$*")) {
+									openOrdersDto
+											.setRequest_Ship_Date(requiredDateFormat.format(existedFormat
+													.parse(requestShipDate)));
+								}
+							}
+						}
+					}
+					if (csvRecord.isMapped("Confirmed Ship Date")) {
+						if (csvRecord.isSet("Confirmed Ship Date")) {
+							String confirmedShipDate = csvRecord
+									.get("Confirmed Ship Date");
+							if (confirmedShipDate != null) {
+								confirmedShipDate = confirmedShipDate.trim()
+										.replaceAll("[',',' ','.']", "");
+								if (!confirmedShipDate.equals("")
+										&& confirmedShipDate
+												.matches("^[0-9/]*$*")) {
+									openOrdersDto
+											.setConfirmed_delivery(requiredDateFormat.format(existedFormat
+													.parse(confirmedShipDate)));
+								}
+							}
+						}
+					}
+					if (csvRecord.isMapped("ETA (Flex)")) {
+						if (csvRecord.isSet("ETA (Flex)")) {
+							String etaFlex = csvRecord
+									.get("ETA (Flex)");
+							if (etaFlex != null) {
+								etaFlex = etaFlex.trim().replaceAll("[',',' ','.']", "");
+								if (!etaFlex.equals("")
+										&& etaFlex.matches("^[0-9/]*$*")) {
+									openOrdersDto.setETD(requiredDateFormat
+											.format(existedFormat
+													.parse(etaFlex)));
+								}
+							}
+						}
+					}
+					if (csvRecord.isMapped("Open Qty")) {
+						if (csvRecord.isSet("Open Qty")) {
+							String openQuantity = csvRecord
+									.get("Open Qty");
+							int quantity = 0;
+							if (openQuantity != null) {
+								openQuantity = openQuantity.replaceAll("[',',' ','.']", "")
+										.trim();
+								if (!openQuantity.equals("")
+										&& openQuantity.matches("^[0-9]*$*")) {
+									quantity = Integer.valueOf(openQuantity);
+								}
+							}
+							openOrdersDto.setQty(quantity);
+						}
+					}
+					if (csvRecord.isMapped("Unit Price")) {
+						if (csvRecord.isSet("Unit Price")) {
+							String unitPrice = csvRecord.get("Unit Price");
+							double price = 0.0;
+							if (unitPrice != null) {
+								unitPrice = unitPrice.replaceAll("[',',' ','.']", "")
+										.trim();
+								if (!unitPrice.equals("")
+										&& unitPrice.matches("^[0-9]*$*")) {
+									price = Integer.valueOf(unitPrice);
+								}
+							}
+							openOrdersDto.setPrice(price);
+						}
+					}
+					if (csvRecord.isMapped("Curr")) {
+						if (csvRecord.isSet("Curr")) {
+							String currency = csvRecord.get("Curr");
+							openOrdersDto.setCurr(currency.trim());
+						}
+					}
+					if (csvRecord.isMapped("Total")) {
+						if (csvRecord.isSet("Total")) {
+							String total = csvRecord.get("Total");
+							double Total = 0.0;
+							if (total != null) {
+								total = total.replaceAll("[',',' ','.']", "").trim();
+								if (!total.equals("")
+										&& total.matches("^[0-9]*$*")) {
+									Total = Integer.valueOf(total);
+								}
+							}
+							openOrdersDto.setTotal(Total);
+						}
+					}
+					if (csvRecord.isMapped("Supplier")) {
+						if (csvRecord.isSet("Supplier")) {
+							String supplier = csvRecord
+									.get("Supplier");
+							openOrdersDto.setSupplier(supplier.trim());
+						}
+					}
+					if (csvRecord.isMapped("Invoice# BaaN")) {
+						if (csvRecord.isSet("Invoice# BaaN")) {
+							String invoice_baan = csvRecord
+									.get("Invoice# BaaN");
+							openOrdersDto.setInvoice_BaaN(invoice_baan.trim());
+						}
+					}
+					if (csvRecord.isMapped("Where used")) {
+						if (csvRecord.isSet("Where used")) {
+							String whereUsed = csvRecord
+									.get("Where used");
+							openOrdersDto.setWhere_used(whereUsed.trim());
+						}
+					}
+					openordersList.add(openOrdersDto);
+				}
+				if (openordersList != null && openordersList.size() > 0) {
+					uploadStatus = openOrdersDao
+							.getInsertOpenOrdersData(openordersList);
+					boolean latestUpoloadStatus = generateLatestOpenOrders(openordersList);
+					fileUploadInfo.setRecordsCount(openordersList.size());
+					fileUploadInfo.setUploadStatus(uploadStatus);
+					if (uploadStatus) {
+						ReportSummary reportSummary = new ReportSummary();
+						reportSummary
+								.setCollectionName(properties
+										.getProperty("orders.pc.collection.openorders"));
+						reportSummary.setLastUploadedFileDate(fileDate);
+						ftpDao.getUpDateReportSummary(reportSummary);
+
+					}
+					if (latestUpoloadStatus) {
+						ReportSummary latestOrdersReportSummary = new ReportSummary();
+						latestOrdersReportSummary.setCollectionName(properties
+								.getProperty("process.openorders.collection"));
+						latestOrdersReportSummary
+								.setLastUploadedFileDate(fileDate);
+						ftpDao.getUpDateReportSummary(latestOrdersReportSummary);
+					}
+				}
+			}
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			try {
+				ftpMail.sendMail(
+						fileDate + " has exception while processing csv"
+								+ exception.getMessage(),
+						"open orders file Upload Status");
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+				e.printStackTrace();
+			}
+		}
+		return fileUploadInfo;
+	}
+
+	private boolean generateLatestOpenOrders(List<PcOpenorders> openordersList) {
+		boolean uploadStatus = false;
+		for (PcOpenorders openOrders : openordersList) {
+			String item = openOrders.getItem();
+			if (item != null) {
+				openOrders.setItem(item.replace("HPM1-", ""));
+			}
+		}
+		uploadStatus = openOrdersDao.generateOpenordersLatest(openordersList);
+		if (uploadStatus) {
+			logger.info("Latest openorders created sucssfully");
+		}
+		return uploadStatus;
+	}
+
+	public String getOpenOrdersFileDate(FTPFile ftpFile) {
+		String fileDate = ftpFile.getName().substring(2, 10);
+		return fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-"
+				+ fileDate.substring(0, 4);
+	}
+
+	public int findHeader(Map<String, Integer> headersMap) {
+		int matchedHeaderCount = 0;
+		List<String> ordersHeadersList = Arrays.asList(OPEN_ORDER_HEADERS);
+		for (java.util.Map.Entry<String, Integer> header : headersMap
+				.entrySet()) {
+			if (ordersHeadersList.contains(header.getKey().trim())) {
+				matchedHeaderCount++;
+			}
+		}
+		System.out.println(matchedHeaderCount);
+		return matchedHeaderCount;
+	}
+
+}

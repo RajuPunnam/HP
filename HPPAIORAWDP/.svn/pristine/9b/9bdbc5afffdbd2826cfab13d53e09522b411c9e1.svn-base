@@ -1,0 +1,539 @@
+package com.techouts.service;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.ConnectException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.techouts.dao.FtpDao;
+import com.techouts.pojo.FileStatus;
+import com.techouts.pojo.FileSupport;
+import com.techouts.pojo.FileUploadInfo;
+import com.techouts.pojo.FtpSupport;
+import com.techouts.pojo.ReportSummary;
+
+/**
+ * Class is responsible to download csv from FTP and convert it.
+ * 
+ * @author TECH
+ *
+ */
+@Service
+public class FtpService
+{
+	final Logger LOGGER = Logger.getLogger(FtpService.class);
+	@Autowired
+	private DoiService doiService;
+	@Autowired
+	private PcOpenOrdersService openOrdersService;
+	@Autowired
+	private PcShipmentsToHpService shipmentsToHpService;
+	@Autowired
+	private PoFromHpService poFromHpService;
+	@Autowired
+	PpbPcService ppbService;
+	@Autowired
+	private BomService bomService;
+	@Autowired
+	private FtpMail ftpMail;
+	@Autowired
+	private FtpDao ftpDao;
+	@Resource(name = "myProps")
+	private Properties properties;
+
+	public int getDownloadFtpFiles(FtpSupport ftpSupport,int connectionTrails) throws ParseException
+	{
+        List<String> folderList=null;
+		String fileDate = null;
+		String requiredFileDate = null;
+		List<String> existedFileDateList = null;
+		int filesUploadCount = 0;
+		FTPClient ftpClient = new FTPClient();
+		Date staticfileDate = null;
+		int ftpFilesCount=0;
+		FTPFile bomLatestFile=null;
+		final DateFormat dateFormat = new SimpleDateFormat("EEE MMM dd hh:mm:ss zzz yyyy", Locale.ENGLISH);
+		folderList=new ArrayList<String>();
+		staticfileDate = dateFormat.parse(ftpSupport.getStaticFileDate());
+		LOGGER.info(ftpSupport.getCollectionName() + "  static or updated date is " + staticfileDate);
+		for (int connectionCount = 0; connectionCount <= 5; connectionCount++)
+		{
+			if (getFtpConnection(ftpClient, connectionCount,ftpSupport))
+			{
+				LOGGER.info("Ftp connected.");
+				existedFileDateList = ftpDao.getFileDates(ftpSupport.getCollectionName(), ftpSupport.getFieldName());
+				try
+				{
+					for (FTPFile mainDir : ftpClient.listDirectories())
+					{
+						if (mainDir.isDirectory() && mainDir.getName().equals(properties.getProperty("main.folder")))
+						{
+							folderList.add(mainDir.getName());
+							LOGGER.info(mainDir.getName());
+							for (FTPFile sub : ftpClient.listDirectories("/" + mainDir.getName()))
+							{
+								if (sub.isDirectory() && sub.getName().equals(ftpSupport.getSubFolder()))
+								{
+									ftpClient.changeWorkingDirectory(mainDir.getName() + "/" + sub.getName());
+									folderList.add(sub.getName());
+									LOGGER.info(sub.getName());
+									for (FTPFile file : ftpClient.listFiles())
+									{
+										if (file.isFile() && !file.getName().contains(ftpSupport.getFileType()))
+										{
+											if(!ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.intended.bom")))
+											{
+											if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.doi")))
+											{
+												fileDate = file.getName().substring(3, 11);
+												requiredFileDate = fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-" + fileDate.substring(0, 4);
+											} else if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.openoreders")))
+											{
+												fileDate = file.getName().substring(2, 10);
+												requiredFileDate = fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-" + fileDate.substring(0, 4);
+											} else if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.shipments")))
+											{
+												fileDate = file.getName().substring(3, 11);
+												requiredFileDate = fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-" + fileDate.substring(0, 4);
+											} else if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.pofromhp")))
+											{
+												fileDate = file.getName().substring(2, 10);
+												requiredFileDate = fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-" + fileDate.substring(0, 4);
+											} else if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.consumption")))
+											{
+												fileDate = file.getName().substring(6, 14);
+												requiredFileDate = fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-" + fileDate.substring(0, 4);
+											}
+
+											if (file.getTimestamp().getTime().after(staticfileDate) && !existedFileDateList.contains(requiredFileDate)
+													&& file.getSize() > 0)
+											{
+												for (int fileDownloadingTries = 0; fileDownloadingTries <= 10; fileDownloadingTries++)
+												{
+													FileSupport fileSupport=new FileSupport();
+													fileSupport.setFtpFile(file);
+													fileSupport.setFtpClient(ftpClient);
+													fileSupport.setFileuploadCount(filesUploadCount);
+													fileSupport.setFileDownloadTrails(fileDownloadingTries);
+													fileSupport.setFolderList(folderList);
+													FtpSupport fileInof = getDownloadFileByFile(fileSupport,ftpSupport);
+													if (fileInof.isDownloadStatus())
+													{
+														filesUploadCount = fileInof.getUploadCount();
+														if(fileInof.isUploadStatus())
+														{
+														//ftpMail.sendMail(ftpSupport.getSubFolder()+" Upload Status",fileSupport.getFtpFile().getName()+" upload compleated");
+														}
+														break;
+													} else
+													{
+														filesUploadCount = fileInof.getUploadCount();
+														continue;
+													}
+												}
+											}
+										}
+											else if(ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.intended.bom")))
+											{
+												ftpFilesCount++;
+												if(file.getName().startsWith("AV List For AV-PN Kinaxis"))
+												{
+													LOGGER.info("File name "+file.getName()+" its upladed date "+file.getTimestamp().getTime());
+													if(file.getTimestamp().getTime().after(staticfileDate))
+													{
+														staticfileDate=file.getTimestamp().getTime();
+														bomLatestFile=file;
+														
+													}
+												}
+												if(ftpFilesCount==ftpClient.listFiles().length)
+												{
+													if(bomLatestFile!=null && bomLatestFile.getSize()>0)
+													{
+														for (int fileDownloadingTries = 0; fileDownloadingTries <= 10; fileDownloadingTries++)
+														{
+															FileSupport fileSupport=new FileSupport();
+															fileSupport.setFtpFile(bomLatestFile);
+															fileSupport.setFtpClient(ftpClient);
+															fileSupport.setFileuploadCount(filesUploadCount);
+															fileSupport.setFileDownloadTrails(fileDownloadingTries);
+															fileSupport.setFolderList(folderList);
+															FtpSupport ftppojo = getDownloadFileByFile(fileSupport,ftpSupport);
+															if (ftppojo.isDownloadStatus())
+															{
+																filesUploadCount = ftppojo.getUploadCount();
+																if (ftppojo.isUploadStatus())
+																{
+															
+																} 
+																break;
+															} else
+															{
+																filesUploadCount = ftppojo.getUploadCount();
+																continue;
+															}
+														}
+													}
+												}
+											}
+										}
+									}//for ending
+									break;
+								}
+							}
+							break;
+						} else
+						{
+							continue;
+						}
+					}
+				} catch (ConnectException connectException)
+				{
+					if(connectionTrails<=5)
+					{
+						getDownloadFtpFiles(ftpSupport,connectionTrails++);
+					}
+					else
+					{
+						break;
+					}
+					LOGGER.error(connectException.getMessage());
+				}
+				catch(Exception exception)
+				{
+					LOGGER.error(exception.getMessage());
+				}
+				finally
+				{
+					if (ftpClient.isConnected())
+					{
+						try
+						{
+							ftpClient.logout();
+							ftpClient.disconnect();
+
+						} catch (Exception e1)
+						{
+							LOGGER.error(e1.getMessage());
+						}
+					}
+				}
+				break;
+			} else
+			{
+				LOGGER.error("ftp connection failed");
+				LOGGER.info("trying to connect ftp  again");
+				continue;
+			}
+		}
+
+		return filesUploadCount;
+	}
+public int downloadBomFilesFromFtp(FtpSupport ftpSupport,int connectionTrails)
+{
+	int filesUploadCount = 0;
+	FTPClient ftpClient = new FTPClient();
+	List<String> folderList=null;
+	folderList=new ArrayList<String>();
+	for (int connectionCount = 0; connectionCount <= 5; connectionCount++)
+	{
+		if (getFtpConnection(ftpClient, connectionCount,ftpSupport))
+		{
+			LOGGER.info("Ftp connected.");
+			try
+			{
+				for (FTPFile mainDir : ftpClient.listDirectories())
+				{
+				if(mainDir.isDirectory() && mainDir.getName().equals(properties.getProperty("techouts.ftp.bom.sub.folder")))
+				{
+					ftpClient.changeWorkingDirectory("/"+mainDir.getName());
+					folderList.add(mainDir.getName());
+					for(FTPFile file:ftpClient.listFiles())
+					{
+						if(file.isFile() && file.getSize()>0 && !file.getName().endsWith(ftpSupport.getFileType()))
+						{
+							if(file.getName().contains((ftpSupport.getFileName())))
+							{
+							for (int fileDownloadingTries = 0; fileDownloadingTries <= 10; fileDownloadingTries++)
+							{
+								FileSupport fileSupport=new FileSupport();
+								fileSupport.setFtpFile(file);
+								fileSupport.setFtpClient(ftpClient);
+								fileSupport.setFileuploadCount(filesUploadCount);
+								fileSupport.setFileDownloadTrails(fileDownloadingTries);
+								fileSupport.setFolderList(folderList);
+								FtpSupport ftppojo = getDownloadFileByFile(fileSupport,ftpSupport);
+								if (ftppojo.isDownloadStatus())
+								{
+									filesUploadCount = ftppojo.getUploadCount();
+									break;
+								} else
+								{
+									filesUploadCount = ftppojo.getUploadCount();
+									continue;
+								}
+							}
+							break;
+						}
+						}
+					}
+					break;
+				}
+				}
+			}catch(ConnectException connectException)
+			{
+				if(connectionTrails<=5)
+				{
+				downloadBomFilesFromFtp(ftpSupport,connectionTrails++);
+				}
+				else
+				{
+					break;
+				}
+			}
+			catch(Exception exception)
+			{
+				LOGGER.error(exception.getMessage());
+			}
+			break;
+			}
+		else
+		{
+			LOGGER.error("ftp connection failed");
+			LOGGER.info("trying to connect ftp  again");
+			continue;
+		}
+       }
+	return filesUploadCount;
+}
+	/**
+	 * This method for connecting to ftp
+	 * 
+	 * @param ftpClient
+	 * @return
+	 * @throws InterruptedException
+	 */
+	public boolean getFtpConnection(FTPClient ftpClient, int connectionCount,FtpSupport ftpSupport)
+	{
+		boolean connectionStatus = false;
+		try
+		{
+			LOGGER.info("Ftp connecting ........");
+			final int port = 21;
+			ftpClient.connect(ftpSupport.getServerAddress(), port);
+			connectionStatus = ftpClient.login(ftpSupport.getUserName(), ftpSupport.getPassword());
+			ftpClient.enterLocalPassiveMode();
+			ftpClient.setBufferSize(1024 * 1024);
+			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+		} catch (IOException exception)
+		{
+			try
+			{
+				if (connectionCount == 5)
+				{
+					ftpMail.sendMail(properties.getProperty("ftp.connection.failed"), properties.getProperty("ftp.subject"));
+				}
+			} catch (Exception e)
+			{
+				LOGGER.info(e.getMessage());
+			}
+
+		}
+		return connectionStatus;
+	}
+
+	/**
+	 * Method responsible for downloading csv files from ftp
+	 * 
+	 * @param file
+	 * @param ftpClient
+	 * @param fileCount
+	 * @param downloadingTrails
+	 * @return
+	 */
+	public FtpSupport getDownloadFileByFile(FileSupport fileSupport, FtpSupport ftpSupport)
+	{
+		File downloadFile = null;
+		FtpSupport ftpPojo = new FtpSupport();
+		FileUploadInfo fileUploadInfo=null;
+		try
+		{
+			LOGGER.info("Downloading started");
+			LOGGER.info("********************");
+			String path = ftpSupport.getDownLoadDirectory();
+			for(String folderName:fileSupport.getFolderList())
+			{
+				path=path.concat(File.separator+folderName);
+			}
+			downloadFile = new File(path);
+			if (!downloadFile.exists())
+			{
+				downloadFile.mkdirs();
+			}
+			LOGGER.info("FILE NAME            :" + fileSupport.getFtpFile().getName());
+			LOGGER.info("FILE DATE            :" + fileSupport.getFtpFile().getTimestamp().getTime());
+
+			boolean downLoadStatus = fileSupport.getFtpClient().retrieveFile(fileSupport.getFtpFile().getName(), new FileOutputStream(new File(path + File.separator + fileSupport.getFtpFile().getName())));
+			if (downLoadStatus)
+			{
+				ftpPojo.setDownloadStatus(downLoadStatus);
+				LOGGER.info("File downloaded sucessfully");
+				boolean uploadStatus = false;
+				if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.doi")))
+				{
+					fileUploadInfo = doiService.getUploadDoicsvData(downloadFile.getAbsoluteFile(), fileSupport.getFtpFile(), properties);
+				} else if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.openoreders")))
+				{
+					fileUploadInfo = openOrdersService.getUploadOpenOrderscsvData(downloadFile.getAbsoluteFile(), fileSupport.getFtpFile(), properties);
+				} else if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.shipments")))
+				{
+					fileUploadInfo = shipmentsToHpService.getUploadShipmentscsvData(downloadFile.getAbsoluteFile(), fileSupport.getFtpFile(), properties);
+				} else if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.pofromhp")))
+				{
+					fileUploadInfo = poFromHpService.getUploadPoFromHpData(downloadFile.getAbsoluteFile(), fileSupport.getFtpFile());
+				} else if (ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.consumption")))
+				{
+					fileUploadInfo = ppbService.getUploadConsumptionCsvData(downloadFile.getAbsoluteFile(), fileSupport.getFtpFile());
+				}
+				else if(ftpSupport.getSubFolder().equals(properties.getProperty("sub.folder.intended.bom")))
+				{
+					uploadStatus=bomService.readIntendedBomFiles(downloadFile.getAbsoluteFile(), fileSupport.getFtpFile());
+				}
+				else if(ftpSupport.getSubFolder().equals(properties.getProperty("techouts.ftp.bom.sub.folder")))
+				{
+					if(fileSupport.getFtpFile().getName().contains("AMLAVCostedBomReportSummary"))
+					{
+						uploadStatus=bomService.readAMLAVCostedBomReportSummary(downloadFile.getAbsoluteFile(), fileSupport.getFtpFile());
+					}
+					else if(fileSupport.getFtpFile().getName().contains("BOMAVReportPeriod"))
+					{
+						uploadStatus=bomService.readBomAvReportPeriodFile(downloadFile.getAbsoluteFile(), fileSupport.getFtpFile());
+					}
+					else if(fileSupport.getFtpFile().getName().contains("BOMFULLReportPeriod"))
+					{
+						uploadStatus=bomService.readBomFullreportPeriodFiles(downloadFile.getAbsoluteFile(), fileSupport.getFtpFile());
+					}
+					
+				}
+				FileStatus status=new FileStatus();
+				status.setFtpLocation(ftpSupport.getServerAddress());
+				status.setSourceFolder(ftpSupport.getSubFolder());
+				status.setFileName(fileSupport.getFtpFile().getName());
+				status.setFileReceivedDate(fileSupport.getFtpFile().getTimestamp().getTime());
+				status.setFileUploadedDate(new Date());
+				status.setUploadStatus(fileUploadInfo.isUploadStatus());
+				status.setNoOfRecords(fileUploadInfo.getRecordsCount());
+				ftpDao.savFileInfo(status);
+				if (uploadStatus || fileUploadInfo.isUploadStatus())
+				{
+					LOGGER.info("file uploaded sucessfully");
+					String sucessFolder = path + File.separator + properties.getProperty("sucess");
+					LOGGER.info(fileSupport.getFtpFile().getName() + " loaded to db with collection name " + ftpSupport.getCollectionName() + " sucessfully");
+					getMoveFilesToSucessOrFailureFolder(downloadFile.getAbsoluteFile(), sucessFolder, fileSupport.getFtpFile());
+					int fileCount=fileSupport.getFileuploadCount()+1;
+					ftpPojo.setUploadCount(fileCount);
+					ftpPojo.setUploadStatus(uploadStatus);
+
+				} else
+				{
+					LOGGER.info("file uploaded failed");
+					int fileCount=fileSupport.getFileuploadCount();
+					ftpPojo.setUploadCount(fileCount);
+				}
+			} else
+			{
+				int fileCount=fileSupport.getFileuploadCount();
+				ftpPojo.setUploadCount(fileCount);
+				ftpPojo.setDownloadStatus(downLoadStatus);
+				if (fileSupport.getFileDownloadTrails() == 10)
+				{
+					LOGGER.error("file download has failed");
+				}
+			}
+
+		} catch (Exception e)
+		{
+			LOGGER.error("exception " + e.getMessage());
+		}
+		return ftpPojo;
+	}
+
+	/**
+	 * This method responsible for moving files to sucess folder
+	 * 
+	 * @param sourceFile
+	 * @param destinationFolder
+	 * @param ftpFile
+	 * @return file moving status
+	 */
+	public boolean getMoveFilesToSucessOrFailureFolder(File sourceFolder, String destinationFolder, FTPFile ftpFile)
+	{
+		File targetFolder = new File(destinationFolder);
+		if (!targetFolder.exists())
+		{
+			targetFolder.mkdirs();
+		}
+		boolean filemovingStatus = false;
+		try
+		{
+			File source = new File(sourceFolder, ftpFile.getName());
+			if (source.renameTo(new File(destinationFolder + File.separator, ftpFile.getName())))
+			{
+				LOGGER.info(ftpFile.getName() + "The file was moved successfully to the new folder");
+				filemovingStatus = true;
+			} else
+			{
+				LOGGER.info(ftpFile.getName() + "The File was not moved.");
+
+			}
+
+		} catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return filemovingStatus;
+	}
+	public Map<String,String> getfileUploadStatusList() 
+	{
+		Map<String, String> statusMap = new TreeMap<String, String>();
+		List<ReportSummary> statusList = ftpDao.getfileUploadStatusList();
+		for (ReportSummary statusreport : statusList)
+		{
+			if (statusreport.getCollectionName() != null)
+			{
+				statusMap.put(statusreport.getCollectionName(), statusreport.getLastUploadedFileDate());
+			}
+		}
+		return statusMap;
+	}
+	public Map<String,FileStatus> getCurrentDayUploadedFilesList()
+	{
+		List<FileStatus> filesList=ftpDao.getUplodedFilesList();
+		Map<String,FileStatus> status=new TreeMap<String, FileStatus>();
+		for(FileStatus fileStatus:filesList)
+		{
+			status.put(fileStatus.getFileName(), fileStatus);
+		}
+		return status;
+	}
+
+}

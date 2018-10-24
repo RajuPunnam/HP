@@ -1,0 +1,101 @@
+##flectronics ftp credintials
+
+flextronics.ftp.userId=fhpcompu
+flectronice.ftp.password=h5w9hB(P
+flectronics.ftp.server=ftpam.flextronics.com
+port=21
+
+##techouts ftp credintials
+techouts.ftp.server=ftp.hp.scm-system.com.br
+techouts.ftp.username=rfidhp\\ftpBinoy
+techouts.ftp.password=1XD3ec2@73
+
+
+#mongo database properties
+mongo.host.name=192.168.1.3
+main.folder=BINOY
+drive.name=D:
+linux.os.name.drive=/home/ec2-user
+databaseName=HPCPSTG
+
+
+##ftp folder names
+sub.folder.doi=DOI
+sub.folder.doi.directory=DOI
+sub.folder.consumption=Consumption
+sub.folder.pofromhp=PO-From-HP
+sub.folder.dir.pofromhp=POFromHP
+sub.folder.shipments=PC-Shipments-to-HP
+sub.folder.dir.shipments=PCShipmentstoHP
+sub.folder.openoreders=Open-Order
+sub.folder.location.pc.openorders=OPENORDER
+sub.folder.intended.bom=BOM
+techouts.ftp.bom.sub.folder=Techouts
+
+##db collection names
+doi.collectionName=DOI
+doi.process.collection=DOI_1.1
+consumption.pc.collectionname=PPB_PC
+shipments.pc.collectionname=INVOICES
+pofromhp.pc.collectionname=OPEN_ORDERS
+orders.pc.collection.openorders=NEW_OPEN_ORDERS
+process.openorders.collection=NEWOPNORDERS_LATEST
+intendedbom.collection=MASTER_BOM_FLEX
+bomavreportperiod.collection=BOM_AV_REPORT_PERIOD
+AMLAVCostedBomReportSummary.collection=BOM_AMLCOSTEDBOM_AVSUMMARY
+bomfullreportperiod.collection=BOM_FULL_REPORT_PERIOD_NEW
+sucess=SUCESS(csv)
+
+##file dates
+consumption.static.pc.date=Wed Sep 01 00:15:00 IST 2016
+doi.static.file.date=Wed Sep 01 00:15:00 IST 2016
+pofromhp.static.date=Wed Sep 01 00:15:00 IST 2016
+shipments.static.date=Wed Sep 01 00:15:00 IST 2016
+openorders.static.file.date=Wed Sep 01 00:15:00 IST 2016
+bom.static.file.date=Wed Jul 21 05:40:00 IST 2016
+
+##email details
+sender.addr=no-reply@techouts.com
+emailPassword=Techouts123
+mail.subject=Notification of data upload
+recipient.addr=hpsupport@techouts.com
+recipient.cc=ajaysandeep.m@techouts.com
+mail.bcc=rajagopal.k@techouts.com
+#log.file.loc=E:\\ETL\\Qlikview_connector\\src\\DataUploadLog.txt
+log.file.loc=E:\\ETL\\Qlikview_connector\\log\\datauploadLog.log
+status.log=E:\\BINOY\\DOI
+doi.field1=Business Unit
+doi.field2=ITEM
+doi.field3=DESCRIPTION
+doi.field4=MAKE_BUY
+doi.field5=SKU
+doi.field6=NETTABLE_INVENTORY
+doi.field7=Total Demand to order
+doi.field8=Date
+doi.no.new.file=No new DOI files were found in FTP today.
+doi.mail.subject=Doi File Upload Status
+doi.mail.body=upload has failed please check the data once
+openorders.mail.subject=Openorders File Upload Status
+
+invoice.mail.subject=Shipment File Upload Status
+pofromhp.mail.subject=PO FROM HP File upload status
+consumption.mail.subject=Consuption pc file upload status
+subject.no.new.file=No new data found
+doi.success.mail.msg=System is updated with latest DOI and is ready for use.
+generic.mail.msg= For any queries or questions, reach out to the support at hppsupprt@techouts.com
+parseException.mail.msg=There was some error while reading data. Kindly check the data and re-upload for further processing.
+ioexception.mail.msg=Oops! Seems like a problem occurred when reading the file.
+interruptedexception.mail.mg=Oops! There seems to be problems with the network. Please get in touch with system administrator for resolution.
+datauploadexception.mail.msg=Oops! Something went wrong while processing. Please check logs for details.
+messagingexception.mail.msg=Oops! The did not send due to 
+addrexception.mail.msg=Oops! The email id is wrong. Correct and re-send the email.
+err.subject=Data upload failure
+success.subject=Data upload success
+on.time=On Time
+not.committed=Not commited
+date.format=MM-dd-yyyy
+
+
+
+ftp.connection.failed=Ftp not connecting due to network issue or wrong credintials of ftp.So Raw data files  updation failed to day. 
+ftp.subject=FTP not working

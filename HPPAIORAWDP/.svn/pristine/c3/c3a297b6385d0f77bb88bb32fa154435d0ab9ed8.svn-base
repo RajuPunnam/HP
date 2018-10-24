@@ -1,0 +1,12 @@
+package com.techouts.customexceptions;
+
+public class DataUploadException extends Exception {
+	DataUploadException() {
+		super();
+	}
+
+	public DataUploadException(String csttomException) {
+		super();
+	}
+
+}

@@ -1,0 +1,142 @@
+package com.techouts.dao;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.stereotype.Repository;
+
+import com.mongodb.BasicDBObject;
+import com.techouts.pojo.DOI;
+import com.techouts.pojo.DOICollection;
+
+@Repository
+public class DoiDao {
+	@Autowired
+	private MongoTemplate mongoTemplate;
+	Logger logger = Logger.getLogger(DoiDao.class);
+	private Properties prop;
+
+	public boolean  getLoadDataToDoi(List<DOI> doiList)
+	{
+		boolean fileUploadStatus=false;
+		try
+		{
+			mongoTemplate.insertAll(doiList);
+		fileUploadStatus=true;
+		}catch(Exception e)
+		{
+			logger.error(e.getMessage());
+		}
+
+		return fileUploadStatus;
+	}
+
+	public  List<String> getDoiDates(String collectionName,
+			String fieldName) {
+		List<String> dateList = mongoTemplate.getCollection(collectionName)
+				.distinct(fieldName);
+		if (dateList.contains(null)) {
+			dateList.removeAll(Collections.singleton(null));
+		}
+		return dateList;
+	}
+
+	public void getInsertFileDates(String collectionName, String fieldName,
+			Date fileDate) {
+		BasicDBObject documentDetail = new BasicDBObject();
+		documentDetail.put(fieldName, fileDate);
+		mongoTemplate.getCollection(collectionName).insert(documentDetail);
+	}
+
+	public List<DOI> doiList(String date, Properties propeties) {
+		logger.info("Inside doiList");
+		this.prop = propeties;
+		logger.debug("Latest Date in DAO :" + date);
+		Query q = new Query(Criteria.where("Date").is(date));
+
+		q.fields().include(prop.getProperty("doi.field1"));
+		q.fields().include(prop.getProperty("doi.field2"));
+		q.fields().include(prop.getProperty("doi.field3"));
+		q.fields().include(prop.getProperty("doi.field4"));
+		q.fields().include(prop.getProperty("doi.field5"));
+		q.fields().include(prop.getProperty("doi.field6"));
+		q.fields().include(prop.getProperty("doi.field7"));
+		q.fields().include(prop.getProperty("doi.field8"));
+
+		return mongoTemplate.find(q, DOI.class);
+	}
+
+	public List<String> getDistinctStringValues(String collectionName,
+			String colunmName) {
+		logger.info("Inside getDistinctStringValues dao");
+		return mongoTemplate.getCollection(collectionName).distinct(
+				colunmName);
+	}
+
+	public void generateDOI(List<DOICollection> list) {
+		logger.info("inside generateDOI DAO");
+		if (mongoTemplate.getCollection("DOI_1.1").count()>0) {
+			mongoTemplate.dropCollection(DOICollection.class);
+		}
+		mongoTemplate.insertAll(list);
+		logger.info("DOI_1.1 created successfully");
+	}
+	
+	
+	public Date getDistinctDate(String collectionName, String Date) {
+		  // TODO Auto-generated method stub
+		  Object fileDate=mongoTemplate.getCollection(collectionName).findOne().get("Date");
+		  Date oldOrdersDate =null;
+		  try {
+		    oldOrdersDate = new SimpleDateFormat("MM-dd-yyyy")
+		   .parse(String.valueOf(fileDate));
+		  } catch (ParseException e) {
+		   // TODO Auto-generated catch block
+		   e.printStackTrace();
+		  }
+		  
+		  return oldOrdersDate;
+		 }
+	
+	
+
+	public List<Object> uniquePartIdsFromAvPartsInfoFinal() {
+		return mongoTemplate.getCollection("AvPartsInfoFinal").distinct(
+				"partId");
+	}
+
+	public List<DOICollection> getDOICollectionList() {
+		Query q = new Query();
+		q.fields().include("PartID");
+		q.fields().include("Quantity");
+		return mongoTemplate.findAll(DOICollection.class);
+	}
+
+	public List<Object> uniquePertIdsFromAvPartsInfoFinal() {
+		return mongoTemplate.getCollection("AvPartsInfoFinal").distinct(
+				"partId");
+	}
+
+	// Deleting collection in case of exceptions
+	public void deleteProcessedDOI(String date) {
+		logger.info("Deleting DOI data with date:" + date
+				+ " to reupload again");
+		Query updQuery = new Query(Criteria.where("Date").is(date));
+
+		mongoTemplate.remove(updQuery, DOI.class);
+
+		logger.info("Deleting DOI_1.1 for retrying again");
+		mongoTemplate.dropCollection(DOICollection.class);
+	}
+
+}

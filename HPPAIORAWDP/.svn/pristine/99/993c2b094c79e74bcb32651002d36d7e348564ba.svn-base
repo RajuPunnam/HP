@@ -1,0 +1,34 @@
+package com.techouts.dao;
+
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.mongodb.MongoException;
+import com.techouts.pojo.PpbPcPojo;
+
+@Repository
+public class PpbPcDao {
+	@Autowired
+	private MongoTemplate mongoTemplate;
+
+	static final Logger LOGGER = Logger.getLogger(PpbPcDao.class);
+
+	public List<String> getFileDates(String collectionName, String fieldName) {
+		return mongoTemplate.getCollection(collectionName).distinct(fieldName);
+	}
+
+	public boolean getInsertConsumptionPcData(List<PpbPcPojo> consumptionList) {
+		boolean uploadStatus = false;
+		try {
+			mongoTemplate.insertAll(consumptionList);
+			uploadStatus = true;
+		} catch (MongoException mongoException) {
+			LOGGER.info("exception at uploading data to db ");
+		}
+		return uploadStatus;
+	}
+}

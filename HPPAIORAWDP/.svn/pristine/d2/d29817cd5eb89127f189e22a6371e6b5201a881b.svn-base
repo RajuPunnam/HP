@@ -1,0 +1,548 @@
+package com.techouts.service;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.techouts.dao.DoiDao;
+import com.techouts.dao.FtpDao;
+import com.techouts.pojo.DOI;
+import com.techouts.pojo.DOICollection;
+import com.techouts.pojo.FileUploadInfo;
+import com.techouts.pojo.ReportSummary;
+
+@Service
+public class DoiService {
+	Logger logger = Logger.getLogger(DoiService.class);
+	@Autowired
+	private DoiDao doiDao;
+	@Autowired
+	private FtpDao ftpDao;
+	@Autowired
+	private FtpMail ftpMail;
+	private final String HEADEMAP[] = { "ITEM", "DESCRIPTION", "MAKE_BUY",
+			"NETTABLE INVENTORY", "MRB/ RTV", "BONE PILE", "TOTAL STK",
+			"TRANSIT", "OO", "TOTAL DEMAND TO ORDER", "SKU", "BUSINESS UNIT",
+			"NET OH" };
+
+	public FileUploadInfo getUploadDoicsvData(File inputLocation, FTPFile file,
+			Properties properties) {
+		CSVParser csvFileParser = null;
+		String fileDate = null;
+		List<DOI> doiList = null;
+		boolean uploadStatus = false;
+		FileUploadInfo fileUploadInfo=new FileUploadInfo();
+		// Create the CSVFormat object with the header mapping
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withFirstRecordAsHeader()
+				.withDelimiter(';').withAllowMissingColumnNames(true)
+				.withIgnoreEmptyLines();
+		fileDate = getFileDate(file);
+		try {
+			csvFileParser = new CSVParser(new FileReader(inputLocation
+					+ File.separator + file.getName()), csvFileFormat);
+			if (findHeaders(csvFileParser.getHeaderMap()) <= HEADEMAP.length/2) {
+				csvFileFormat = null;
+				csvFileFormat = CSVFormat.DEFAULT.withHeader(HEADEMAP)
+						.withDelimiter(';').withAllowMissingColumnNames(true)
+						.withIgnoreEmptyLines();
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + file.getName()), csvFileFormat);
+			}
+		} catch (IllegalArgumentException illegalArgumentException) 
+		{
+			csvFileFormat = null;
+			csvFileFormat = CSVFormat.DEFAULT.withHeader(HEADEMAP)
+					.withDelimiter(';').withAllowMissingColumnNames(true)
+					.withIgnoreEmptyLines();
+			try {
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + file.getName()), csvFileFormat);
+			} catch (Exception exception) {
+				logger.error(exception.getMessage());
+			}
+		} catch (Exception exception) {
+			logger.info(exception.getMessage());
+		}
+
+		try {
+			List<CSVRecord> csvRecordsList = csvFileParser.getRecords();
+			if (csvRecordsList != null && csvRecordsList.size() > 0) {
+				doiList = new ArrayList<DOI>();
+				for (int i = 0; i < csvRecordsList.size(); i++) {
+					DOI doi = new DOI();
+					CSVRecord csvRecord = (CSVRecord) csvRecordsList.get(i);
+					doi.setDate(fileDate);
+					if (csvRecord.isMapped("ITEM")) 
+					{
+						if (csvRecord.isSet("ITEM")) {
+							String item = csvRecord.get("ITEM");
+							doi.setItem(item.trim());
+						}
+					}
+					if (csvRecord.isMapped("DESCRIPTION")) {
+						if (csvRecord.isSet("DESCRIPTION")) {
+							String description = csvRecord.get("DESCRIPTION");
+							doi.setDescription(description.trim());
+						}
+					}
+					if (csvRecord.isMapped("MAKE_BUY")) {
+						if (csvRecord.isSet("MAKE_BUY")) {
+							String makeBuy = csvRecord.get("MAKE_BUY");
+							doi.setMakebuy(makeBuy.trim());
+						}
+					}
+					if (csvRecord.isMapped("NETTABLE INVENTORY")) {
+						if (csvRecord.isSet("NETTABLE INVENTORY")) {
+							String nettableInventory = csvRecord
+									.get("NETTABLE INVENTORY");
+							int nettable_Inventory = 0;
+							if (nettableInventory != null) {
+								nettableInventory = nettableInventory
+										.replaceAll("[',',' ','.']", "").trim();
+								if (!nettableInventory.equals("")
+										&& nettableInventory
+												.matches("^[0-9]*$*")) {
+									nettable_Inventory = Integer
+											.valueOf(nettableInventory);
+								}
+							}
+							doi.setNetQty(nettable_Inventory);
+						}
+					}
+					if (csvRecord.isMapped("MRB/ RTV")) {
+						if (csvRecord.isSet("MRB/ RTV")) {
+							String nonNettableInventory = csvRecord
+									.get("MRB/ RTV");
+							int nonNettable_Inventory = 0;
+							if (nonNettableInventory != null) {
+								nonNettableInventory = nonNettableInventory
+										.replaceAll("[',',' ','.']", "").trim();
+								if (!nonNettableInventory.equals("")
+										&& nonNettableInventory
+												.matches("^[0-9]*$*")) {
+									nonNettable_Inventory = Integer
+											.valueOf(nonNettableInventory);
+								}
+							}
+							doi.setNON_NETTABLE_INVENTORY(nonNettable_Inventory);
+						}
+					}
+					if (csvRecord.isMapped("BONE PILE")) {
+						if (csvRecord.isSet("BONE PILE")) {
+							String bonePile = csvRecord.get("BONE PILE");
+							int BONEPILE = 0;
+							if (bonePile != null) {
+								bonePile = bonePile.trim().replaceAll(",", "");
+								if (!bonePile.equals("")
+										&& bonePile.matches("^[0-9]*$*")) {
+									BONEPILE = Integer.parseInt(bonePile);
+								}
+							}
+
+							doi.setBONE_PILE(BONEPILE);
+						}
+					}
+					if (csvRecord.isMapped("TOTAL STK")) {
+						if (csvRecord.isSet("TOTAL STK")) {
+							String totalStk = csvRecord.get("TOTAL STK");
+							int total_Stk = 0;
+							if (totalStk != null) {
+								totalStk = totalStk.replaceAll("[',',' ','.']", "").trim();
+								if (!totalStk.equals("")
+										&& totalStk.matches("^[0-9]*$*")) {
+									total_Stk = Integer.valueOf(totalStk);
+								}
+							}
+							doi.setTOTAL_STK(total_Stk);
+						}
+					}
+					if (csvRecord.isMapped("TRANSIT")) {
+						if (csvRecord.isSet("TRANSIT")) {
+							String TRANSIT = csvRecord.get("TRANSIT");
+							int transit = 0;
+							if (TRANSIT != null) {
+								TRANSIT = TRANSIT.replaceAll("[',',' ','.']", "").trim();
+								if (!TRANSIT.equals("")
+										&& TRANSIT.matches("^[0-9]*$*")) {
+									transit = Integer.valueOf(TRANSIT);
+								}
+							}
+							doi.setTransit(transit);
+						}
+					}
+					if (csvRecord.isMapped("OO")) {
+						if (csvRecord.isSet("OO")) {
+							String oo = csvRecord.get("OO");
+							doi.setOO(oo.trim());
+						}
+					}
+					if (csvRecord.isMapped("TOTAL DEMAND TO ORDER")) {
+						if (csvRecord.isSet("TOTAL DEMAND TO ORDER")) {
+							String totalDemandToOrder = csvRecord
+									.get("TOTAL DEMAND TO ORDER");
+							int total_Demand_To_Order = 0;
+							if (totalDemandToOrder != null) {
+								totalDemandToOrder = totalDemandToOrder
+										.replaceAll("[',',' ','.']", "").trim();
+								if (!totalDemandToOrder.equals("")
+										&& totalDemandToOrder
+												.matches("^[0-9]*$*")) {
+									total_Demand_To_Order = Integer
+											.parseInt(totalDemandToOrder);
+								}
+							}
+							doi.setDemandQty(total_Demand_To_Order);
+						}
+					}
+					if (csvRecord.isMapped("SKU")) {
+						if (csvRecord.isSet("SKU")) {
+							String sku = csvRecord.get("SKU");
+							doi.setSku(sku.trim());
+						}
+					}
+					if (csvRecord.isMapped("BUSINESS UNIT")) {
+						if (csvRecord.isSet("BUSINESS UNIT")) {
+							String businessUnit = csvRecord.get("BUSINESS UNIT");
+							doi.setBaseunit(businessUnit.trim());
+						}
+					}
+					if (csvRecord.isMapped("NET OH")) {
+						if (csvRecord.isSet("NET OH")) {
+							String netOH = csvRecord.get("NET OH");
+							doi.setNET_OH(netOH.trim());
+						}
+					}
+					doiList.add(doi);
+				}
+
+				if (doiList != null && doiList.size() > 0) 
+				{
+					uploadStatus = doiDao.getLoadDataToDoi(doiList);
+					fileUploadInfo.setUploadStatus(uploadStatus);
+					fileUploadInfo.setRecordsCount(doiList.size());
+					if(generateDOI_1_1(doiList,properties))
+					{
+						ReportSummary reportSummary = new ReportSummary();
+						reportSummary.setCollectionName("DOI_1.1");
+						reportSummary.setLastUploadedFileDate(fileDate);
+						ftpDao.getUpDateReportSummary(reportSummary);
+				          logger.info("DOI-1.1 Updated Successfully");
+				         }else{
+				          logger.info("DOI-1.1 not updated");
+				         }
+					
+					
+					if (uploadStatus) 
+					{
+						ReportSummary reportSummary = new ReportSummary();
+						reportSummary.setCollectionName(properties.getProperty("doi.collectionName"));
+						reportSummary.setLastUploadedFileDate(fileDate);
+						ftpDao.getUpDateReportSummary(reportSummary);
+					}
+				}
+			}
+		} 
+		catch (IllegalArgumentException illegalArgumentException) 
+		{
+			logger.info(illegalArgumentException.getMessage());
+		}
+		catch (NullPointerException nullPointerException) {
+			logger.info(nullPointerException.getMessage());
+		} catch (Exception exception) {
+			logger.error(exception.getMessage());
+		} finally {
+			try {
+
+				if (csvFileParser != null) {
+					csvFileParser.close();
+				
+				}
+
+			} catch (IOException e) {
+				logger.info(e.getMessage());
+			}
+		}
+		return fileUploadInfo;
+	}
+
+	private int findHeaders(Map<String, Integer> headerMap) {
+		int headerCount = 0;
+		List<String> headerList = Arrays.asList(HEADEMAP);
+		for (Entry<String, Integer> header : headerMap.entrySet()) 
+		{
+			if(header!=null)
+			{
+			if (headerList.contains(header.getKey().trim())) {
+				headerCount++;
+			}
+			}
+		}
+		return headerCount;
+	}
+
+	public String getFileDate(FTPFile ftpFile) {
+		String fileDate = ftpFile.getName().substring(3, 11);
+		return fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-"
+				+ fileDate.substring(0, 4);
+	}
+
+	/**
+	 * it will create DOI1.1 collection from DOI
+	 */
+	public void generateDOI(Properties prop) {
+		logger.info("Inside generateDOI service");
+		String latestDate = new String();
+		try {
+			List<String> doiDistinctDates = doiDao.getDistinctStringValues(
+					prop.getProperty("doi.collectionName"), "Date");
+
+			logger.debug("doiDistinctDates: " + doiDistinctDates.size());
+
+			latestDate = getLatestDate("MM-dd-yyyy", doiDistinctDates);
+			logger.debug("latest Date:" + latestDate);
+
+			List<DOI> doilist = doiDao.doiList(latestDate, prop);
+
+			List<DOICollection> finallist = new ArrayList<DOICollection>();
+			logger.debug("Populating finalList");
+			for (DOI doi : doilist) {
+				DOICollection doicollection = new DOICollection();
+				doicollection.setBusinessUnit(doi.getBaseunit());
+				doicollection.setMakeBuy(doi.getMakebuy());
+				doicollection.setSku(doi.getSku());
+				doicollection.setDescription(doi.getDescription());
+				doicollection.setDate(doi.getDate());
+				String partId = doi.getItem();
+				if (partId.contains("HPM1-")) {
+					String trimedpartId = partId.substring(5);
+					doicollection.setPartId(trimedpartId);
+				} else {
+
+					doicollection.setPartId(partId);
+				}
+
+				int totalQty = (doi.getNetQty() - doi.getDemandQty());
+
+				if (totalQty < 0) {
+					doicollection.setQuantity(0);
+				} else {
+					doicollection.setQuantity(totalQty);
+				}
+				if (doi.getDemandQty() > 0) {
+					logger.debug("finalqty :" + totalQty + ": netqty : "
+							+ doi.getNetQty() + ":  demandqty :"
+							+ doi.getDemandQty() + ": partID  :" + partId);
+				}
+				finallist.add(doicollection);
+			}// for
+			logger.debug("finallist size:" + finallist.size());
+			doiDao.generateDOI(finallist);
+			logger.info("collection generated - doi_1.1. updating status now");
+			ReportSummary reportSummary = new ReportSummary();
+			reportSummary.setCollectionName(prop
+					.getProperty("doi.process.collection"));
+			reportSummary.setLastUploadedFileDate(latestDate);
+			ftpDao.getUpDateReportSummary(reportSummary);
+			logger.info("Exiting generateDoi() service");
+		} catch (Exception e) {
+			logger.error("Exception ocurred:" + e.getMessage());
+			logger.error("In case of error, removing duplicates");
+			// deleteDOICollectionOnErr(prop,latestDate);
+		}
+	}
+	
+	
+	
+	
+	/**
+	 * 
+	 * 
+	 * generate 
+	 * 
+	 * DOI-1.1 using DOI Data*/
+	
+	@SuppressWarnings("unused")
+	 public boolean generateDOI_1_1(List<DOI> doilist,Properties prop){
+	  
+	  logger.info("Inside generateDOI-1.1 service");
+	  List<DOICollection> finallist = new ArrayList<DOICollection>();
+	  boolean doi11uploadstatus=false;
+	  SimpleDateFormat simpledateformat = new SimpleDateFormat("MM-dd-yyyy");
+	 
+	  Date newDate = null;
+	  try {
+	   Date oldDate = doiDao.getDistinctDate(prop.getProperty("doi.process.collection"), "Date");
+	   logger.debug("old Date::::" + oldDate);
+	   String latestDate = doilist.get(0).getDate();
+	   try {
+	    newDate = simpledateformat.parse(latestDate);
+	   } catch (ParseException ex) {
+	    logger.error("Error: " + ex.getMessage());
+	    ex.printStackTrace();
+	   }
+	   logger.info("Latest Date::::::"+newDate+":::::::::"+"Old Date:::::::"+oldDate);
+	   
+	   if ((latestDate != null) && (oldDate != null)) {
+	    if (newDate.after(oldDate)) {
+	   
+	   logger.debug("Populating finalList");
+	   for (DOI doi : doilist) {
+	    DOICollection doicollection = new DOICollection();
+	    doicollection.setBusinessUnit(doi.getBaseunit());
+	    doicollection.setMakeBuy(doi.getMakebuy());
+	    doicollection.setSku(doi.getSku());
+	    doicollection.setDescription(doi.getDescription());
+	    doicollection.setDate(doi.getDate());
+	    String partId = doi.getItem();
+	    if (partId.contains("HPM1-")) {
+	     String trimedpartId = partId.substring(5);
+	     doicollection.setPartId(trimedpartId);
+	    } else {
+
+	     doicollection.setPartId(partId);
+	    }
+	    int totalQty = (doi.getNetQty() - doi.getDemandQty());
+
+	    if (totalQty < 0) {
+	     doicollection.setQuantity(0);
+	    } else {
+	     doicollection.setQuantity(totalQty);
+	    }
+	    if (doi.getDemandQty() > 0) {
+	     logger.debug("finalqty :" + totalQty + ": netqty : "
+	       + doi.getNetQty() + ":  demandqty :"
+	       + doi.getDemandQty() + ": partID  :" + partId);
+	    }
+	    finallist.add(doicollection);
+	   }// for
+	   logger.debug("finallist size:" + finallist.size());
+	   doiDao.generateDOI(finallist);
+	   logger.info("collection generated - doi_1.1. updating status now");
+	   ReportSummary reportSummary = new ReportSummary();
+	   reportSummary.setCollectionName(prop
+	     .getProperty("doi.process.collection"));
+	   reportSummary.setLastUploadedFileDate(latestDate);
+	   ftpDao.getUpDateReportSummary(reportSummary);
+	   logger.info("Exiting generateDoi() service");
+	  } }}catch (Exception e) {
+	   logger.error("Exception ocurred:" + e.getMessage());
+	   logger.error("In case of error, removing duplicates");
+	   // deleteDOICollectionOnErr(prop,latestDate);
+	  }
+	  
+	  if(finallist.size()>0){
+	   doi11uploadstatus=true;
+	  }
+	  return doi11uploadstatus;
+	 }
+	
+	
+	
+	
+	/**
+	 * 
+	 * @param dateformat
+	 * @param stringDates
+	 * @return
+	 */
+	public String getLatestDate(String dateformat, List<String> stringDates) {
+		logger.info("inside getLatestDate");
+		if (stringDates.size() > 1) {
+			SimpleDateFormat simpledateformat = new SimpleDateFormat(dateformat);
+			String latestStrDate = "";
+			boolean firstRecord = true;
+			for (String strDate : stringDates) {
+				if (!firstRecord) {
+					String secondstrDate = strDate;
+					latestStrDate.trim();
+					secondstrDate.trim();
+					String latestStrDate1 = latestStrDate.replaceAll(
+							"['.','_',',','/','?',':',';', ]", "-");
+					String secondstrDate1 = secondstrDate.replaceAll(
+							"['.','_',',','/','?',':',';', ]", "-");
+					// System.out.println("list of dates :"+latestStrDate);
+					logger.debug("list of dates :" + secondstrDate);
+					Date latestDate = null;
+					Date secondDate = null;
+					try {
+						latestDate = simpledateformat.parse(latestStrDate1);
+						secondDate = simpledateformat.parse(secondstrDate1);
+					} catch (ParseException ex) {
+						logger.error("Error: " + ex.getMessage());
+						ex.printStackTrace();
+					}
+					if ((latestDate != null) && (secondDate != null)) {
+						if (latestDate.before(secondDate)) {
+							latestStrDate = strDate;
+
+						}
+					}
+
+				} else {
+					latestStrDate = strDate;
+					firstRecord = false;
+					logger.debug("list of dates :" + strDate);
+				}
+			}// for
+			logger.debug("latest date :" + latestStrDate);
+			return latestStrDate;
+		}// size>1
+		else {
+			logger.debug("return stringDates.get(0) :" + stringDates.get(0));
+			return stringDates.get(0);
+		}
+
+	}// method
+
+	private int getDifferenceDays(String date1, String date2) {
+		Date firstDate = null;
+		Date secondDate = null;
+		int differencesDays = 0;
+		SimpleDateFormat simpledateformat = new SimpleDateFormat("MM-dd-yyyy");
+		date1.trim();
+		date2.trim();
+		try {
+			firstDate = simpledateformat.parse(date1);
+			secondDate = simpledateformat.parse(date2);
+		} catch (ParseException ex) {
+			ex.printStackTrace();
+		}
+		if ((firstDate != null) && (secondDate != null)) {
+			long diffenceTime = (firstDate.getTime() - secondDate.getTime());
+			differencesDays = (int) (diffenceTime / (24 * 60 * 60 * 1000));
+		}
+		return differencesDays;
+	}
+
+	/**
+	 * Deleting data in case of error to avoid duplicacy
+	 * 
+	 * @param date
+	 */
+	public void deleteDOICollectionOnErr(Properties properties, String date) {
+		logger.info("inside deleteDOICollectionOnErr");
+
+		doiDao.deleteProcessedDOI(date);
+		ftpMail.sendMail(
+				properties.getProperty("datauploadexception.mail.msg"),
+				properties.getProperty("err.subject"));
+		logger.info("exiting deleteDOICollectionOnErr");
+	}
+}

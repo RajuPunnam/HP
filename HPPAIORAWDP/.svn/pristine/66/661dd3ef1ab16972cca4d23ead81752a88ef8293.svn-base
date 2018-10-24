@@ -1,0 +1,72 @@
+package com.techouts.workerthread;
+
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.techouts.pojo.FtpSupport;
+import com.techouts.service.FtpService;
+import com.techouts.service.OperatingStstem;
+
+@Component
+public class PcShipmentsToHpWorkerThread implements Runnable {
+	private static final Logger LOGGER = Logger
+			.getLogger(PcShipmentsToHpWorkerThread.class);
+	int count = 0;
+	@Autowired
+	private FtpService ftpService;
+	@Autowired
+	private OperatingStstem operatingStstem;
+	@Resource(name = "myProps")
+	private Properties properties;
+	private boolean methodCompleationStatus;
+
+	@Override
+	public synchronized void run() {
+		count++;
+		System.out.println(count + " th time came in to invoices ");
+		FtpSupport ftpSupport = new FtpSupport();
+		ftpSupport.setServerAddress(properties.getProperty("flectronics.ftp.server"));
+		ftpSupport.setUserName(properties.getProperty("flextronics.ftp.userId"));
+		ftpSupport.setPassword(properties.getProperty("flectronice.ftp.password"));
+		ftpSupport.setStaticFileDate(properties
+				.getProperty("shipments.static.date"));
+		ftpSupport.setCollectionName(properties
+				.getProperty("shipments.pc.collectionname"));
+		ftpSupport.setDownLoadDirectory(operatingStstem.getOperatoingSystemDownloadPath());
+		ftpSupport.setFieldName("File Date");
+		ftpSupport.setSubFolder(properties.getProperty("sub.folder.shipments"));
+		ftpSupport.setMailSubject(properties
+				.getProperty("invoice.mail.subject"));
+		ftpSupport.setMailBody(properties.getProperty("doi.mail.body"));
+		ftpSupport.setFileType(".xl");
+		try {
+			FTPClient ftpClient = new FTPClient();
+			if (ftpClient.isConnected()) {
+				ftpClient.logout();
+				ftpClient.disconnect();
+			}
+			methodCompleationStatus=false;
+			int uploadCount = ftpService.getDownloadFtpFiles(ftpSupport,0);
+			if (uploadCount > 0) {
+				LOGGER.info(uploadCount + " new files found");
+			} else {
+				LOGGER.info("No files found");
+			}
+		} catch (Exception exception) {
+
+		}
+		methodCompleationStatus = true;
+	}
+
+
+	public boolean getDoiDownloadMethodCompleationStatus() {
+
+		return methodCompleationStatus;
+	}
+}

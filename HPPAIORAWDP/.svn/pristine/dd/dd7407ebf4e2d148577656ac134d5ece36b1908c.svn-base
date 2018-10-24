@@ -1,0 +1,33 @@
+package com.techouts.dao;
+
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.techouts.pojo.PoFromHpPojo;
+
+@Repository
+public class PoFromHpDao {
+	@Autowired
+	private MongoTemplate mongoTemplate;
+	Logger logger = Logger.getLogger(PoFromHpDao.class);
+
+	public boolean getUploadcsvData(List<PoFromHpPojo> pofromHpList) {
+		boolean uploadStatus = false;
+		try {
+			mongoTemplate.insertAll(pofromHpList);
+			uploadStatus = true;
+		} catch (Exception exception) {
+
+		}
+		return uploadStatus;
+	}
+
+	public List<String> getFileNames(String collectionName, String fieldName) {
+		return mongoTemplate.getCollection(collectionName)
+				.distinct(fieldName);
+	}
+}

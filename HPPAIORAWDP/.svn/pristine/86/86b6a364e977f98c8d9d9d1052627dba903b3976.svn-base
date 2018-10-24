@@ -1,0 +1,289 @@
+package com.techouts.service;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.techouts.dao.FtpDao;
+import com.techouts.dao.PcShipmentsToHpDao;
+import com.techouts.pojo.FileUploadInfo;
+import com.techouts.pojo.PcShipmentsToHpPojo;
+import com.techouts.pojo.ReportSummary;
+
+@Service
+public class PcShipmentsToHpService {
+	private final static Logger LOGGER = Logger
+			.getLogger(PcShipmentsToHpService.class);
+	@Autowired
+	private PcShipmentsToHpDao shipmentsDao;
+	@Autowired
+	private FtpDao ftpDao;
+	@Autowired
+	private FtpMail ftpMail;
+	SimpleDateFormat requiredDateFormat = new SimpleDateFormat("MM-dd-yyyy");
+	SimpleDateFormat existedFormat = new SimpleDateFormat("dd/MM/yyyy");
+
+	private String INVOICESHEADER[] = { "HPM1-", "Family", "Date", "SKU", "PL",
+			"PO", "Shipped", "NF", "Pallet", "PO Qty", "Customer", "Embarque" };
+	List<String> invoicesHeaderList = Arrays.asList(INVOICESHEADER);
+
+	public FileUploadInfo getUploadShipmentscsvData(File inputLocation, FTPFile file,
+			Properties properties) {
+		CSVParser csvFileParser = null;
+		boolean uploadStatus = false;
+		List<PcShipmentsToHpPojo> shipmentsList = null;
+		FileUploadInfo fileUploadInfo=new FileUploadInfo();
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withFirstRecordAsHeader()
+				.withDelimiter(';').withAllowMissingColumnNames();
+		String fileDate = getShipmentFileDate(file);
+		try {
+			csvFileParser = new CSVParser(new FileReader(inputLocation
+					+ File.separator + file.getName()), csvFileFormat);
+			if (findHeaders(csvFileParser.getHeaderMap()) <= invoicesHeaderList.size()/2) {
+				csvFileFormat = null;
+				csvFileFormat = CSVFormat.DEFAULT.withHeader(INVOICESHEADER)
+						.withDelimiter(';').withAllowMissingColumnNames();
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + file.getName()), csvFileFormat);
+			}
+		} catch (IllegalArgumentException illegalArgumentException) 
+		{
+			csvFileFormat = null;
+			try {
+				csvFileFormat = CSVFormat.DEFAULT.withHeader(INVOICESHEADER)
+						.withDelimiter(';').withAllowMissingColumnNames();
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + file.getName()), csvFileFormat);
+			} catch (Exception exception) {
+				LOGGER.error(exception.getMessage());
+			}
+		} catch (FileNotFoundException fileNotFoundException) 
+		{
+			LOGGER.error(fileNotFoundException.getMessage());
+		} catch (Exception exception) {
+			LOGGER.error(exception.getMessage());
+		}
+		try {
+			List<CSVRecord> csvRecordsList = csvFileParser.getRecords();
+			if (csvRecordsList != null && csvRecordsList.size() > 0) {
+				shipmentsList = new ArrayList<PcShipmentsToHpPojo>();
+				for (int i = 0; i < csvRecordsList.size(); i++) {
+					CSVRecord shipmentsRecord = (CSVRecord) csvRecordsList
+							.get(i);
+					if (!invoicesHeaderList.contains(shipmentsRecord
+							.get("HPM1-"))) {
+						PcShipmentsToHpPojo shipmentsToHpDto = new PcShipmentsToHpPojo();
+						shipmentsToHpDto.setFileDate(fileDate);
+						if (shipmentsRecord.isMapped("HPM1-")) {
+							if (shipmentsRecord.isSet("HPM1-")) {
+								String hpm1 = shipmentsRecord
+										.get("HPM1-");
+								shipmentsToHpDto.setHpm1(hpm1.trim());
+							}
+						}
+
+						if (shipmentsRecord.isMapped("Family")) {
+							if (shipmentsRecord.isSet("Family")) {
+								String family = shipmentsRecord
+										.get("Family");
+								shipmentsToHpDto.setFamily(family.trim());
+							}
+						}
+						if (shipmentsRecord.isMapped("Date")) {
+							if (shipmentsRecord.isSet("Date")) {
+								String date = shipmentsRecord
+										.get("Date");
+								if (date != null) {
+									date = date.replaceAll("[',',' ','.']", "").trim();
+									if (!date.equals("")
+											&& date.matches("^[0-9/]*$*")) {
+										shipmentsToHpDto
+												.setDate(requiredDateFormat
+														.format(existedFormat
+																.parse(date)));
+									} else {
+										shipmentsToHpDto.setDate(date);
+									}
+								}
+							}
+						}
+						if (shipmentsRecord.isMapped("SKU")) {
+							if (shipmentsRecord.isSet("SKU")) {
+								String sku = shipmentsRecord
+										.get("SKU");
+								shipmentsToHpDto.setSKU(sku.trim());
+							}
+						}
+						if (shipmentsRecord.isMapped("PL")) {
+							if (shipmentsRecord.isSet("PL")) {
+								String pl = shipmentsRecord
+										.get("PL");
+								shipmentsToHpDto.setPLs(pl.trim());
+							}
+						}
+
+						if (shipmentsRecord.isMapped("PO")) {
+							if (shipmentsRecord.isSet("PO")) {
+								String po = shipmentsRecord
+										.get("PO");
+								double PO = 0;
+								if (po != null) {
+									po = po.replaceAll("[',',' ','.']", "").trim();
+									if (!po.equals("")
+											&& po.matches("^[0-9]*$*")) {
+										PO = Double.parseDouble(po);
+									}
+								}
+								shipmentsToHpDto.setPo(PO);
+							}
+						}
+						if (shipmentsRecord.isMapped("Shipped")) {
+							if (shipmentsRecord.isSet("Shipped")) {
+								String shipped = shipmentsRecord
+										.get("Shipped");
+								double shippedQuantity = 0;
+								if (shipped != null) {
+									shipped = shipped.replaceAll("[',',' ','.']", "")
+											.trim();
+									if (!shipped.equals("")
+											&& shipped.matches("^[0-9]*$*")) {
+										shippedQuantity = Integer
+												.parseInt(shipped);
+									}
+								}
+								shipmentsToHpDto.setShipped(shippedQuantity);
+							}
+						}
+
+						if (shipmentsRecord.isMapped("NF")) {
+							if (shipmentsRecord.isSet("NF")) {
+								String nf = shipmentsRecord
+										.get("NF");
+								double nfiscal = 0;
+								if (nf != null) {
+									nf = nf.trim().replaceAll("[',',' ','.']", "");
+									if (!nf.equals("")
+											&& nf.matches("^[0-9]*$*")) {
+										nfiscal = Double.parseDouble(nf);
+									}
+								}
+								shipmentsToHpDto.setNFiscal(nfiscal);
+							}
+						}
+
+						if (shipmentsRecord.isMapped("Pallet")) {
+							if (shipmentsRecord.isSet("Pallet")) {
+								String pallet = shipmentsRecord
+										.get("Pallet");
+								double PALLET = 0.0;
+								if (pallet != null) {
+									pallet = pallet.trim().replaceAll("[',',' ','.']", "");
+									if (!pallet.equals("")
+											&& pallet.matches("^[0-9]*$*")) {
+										PALLET = Double.parseDouble(pallet);
+									}
+								}
+								shipmentsToHpDto.setPallet(PALLET);
+							}
+						}
+						if (shipmentsRecord.isMapped("PO Qty")) {
+							if (shipmentsRecord.isSet("PO Qty")) {
+								String poQty = shipmentsRecord
+										.get("PO Qty");
+								double quantity = 0;
+								if (poQty != null) {
+									poQty = poQty.replaceAll("[',',' ','.']", "").trim();
+									if (!poQty.equals("")
+											&& poQty.matches("^[0-9]*$*")) {
+										quantity = Double.parseDouble(poQty);
+									}
+								}
+								shipmentsToHpDto.setQuantity(quantity);
+							}
+						}
+						if (shipmentsRecord.isMapped("Customer")) {
+							if (shipmentsRecord.isSet("Customer")) {
+								String customer = shipmentsRecord
+										.get("Customer");
+								shipmentsToHpDto.setCustomer(customer.trim());
+							}
+						}
+
+						if (shipmentsRecord.isMapped("Embarque")) {
+							if (shipmentsRecord.isSet("Embarque")) {
+								String embarque = shipmentsRecord
+										.get("Embarque");
+								shipmentsToHpDto.setEmbarque(embarque.trim());
+							}
+						}
+						shipmentsList.add(shipmentsToHpDto);
+					}
+				}
+				if (shipmentsList != null && shipmentsList.size() > 0) 
+				{
+					shipmentsDao.insertInvoicesData(shipmentsList);
+					uploadStatus = true;
+					if (uploadStatus) {
+						ReportSummary reportSummary = new ReportSummary();
+						reportSummary.setCollectionName(properties
+								.getProperty("shipments.pc.collectionname"));
+						reportSummary.setLastUploadedFileDate(fileDate);
+						ftpDao.getUpDateReportSummary(reportSummary);
+					}
+				}
+				fileUploadInfo.setUploadStatus(uploadStatus);
+				fileUploadInfo.setRecordsCount(shipmentsList.size());
+			}
+		} catch (NullPointerException nullPointerException) {
+			LOGGER.error(nullPointerException.getMessage());
+
+		} catch (Exception exception) {
+			LOGGER.error(exception.getMessage());
+		} finally {
+			if (csvFileParser != null) {
+				try {
+					csvFileParser.close();
+				} catch (IOException e) {
+					LOGGER.error(e.getMessage());
+				}
+			}
+		}
+		return fileUploadInfo;
+	}
+
+	public int findHeaders(Map<String, Integer> headersMap) {
+		int headerMatchCount = 0;
+
+		for (Entry<String, Integer> header : headersMap.entrySet()) {
+			if (invoicesHeaderList.contains(header.getKey().trim())) {
+				headerMatchCount++;
+			}
+		}
+
+		return headerMatchCount;
+	}
+
+	public String getShipmentFileDate(FTPFile ftpFile) 
+	{
+		String fileDate = ftpFile.getName().substring(3, 11);
+		return fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-"
+				+ fileDate.substring(0, 4);
+	}
+
+}

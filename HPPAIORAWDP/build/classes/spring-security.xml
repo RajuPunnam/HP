@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xmlns:sec="http://www.springframework.org/schema/security" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.5.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+
+
+	<mvc:annotation-driven />
+	<mvc:default-servlet-handler />
+	<context:annotation-config />
+	<!-- <context:component-scan base-package="com.techouts.hp.controller" />
+	<context:component-scan base-package="com.techouts.hp.dao" />
+	<context:component-scan base-package="com.techouts.hp.dao.impl" />
+	<context:component-scan base-package="com.techouts.hp.security" />
+	<context:component-scan base-package="com.techouts.hp.service" />
+	<context:component-scan base-package="com.techouts.hp.service.impl" />
+	<context:component-scan base-package="com.techouts.hp.util" />
+	<context:component-scan base-package="com.techouts.hp.workerthread" /> -->
+	<context:component-scan base-package="com.techouts.test" />
+	
+	   <alias name="dHLServiceImpl" alias="courier"/>
+	<bean id="dHLServiceImpl" class="com.techouts.test.DHLServiceImpl">
+	
+	</bean>
+	
+	<alias name="bludeDartServiceImpl" alias="courier"/>
+	<bean id="bludeDartServiceImpl" class="com.techouts.test.BludeDartServiceImpl">
+	
+	</bean>
+	
+
+	
+	   <alias name="blueDartFacadeImpl" alias="courierFacade"/>
+	<bean id="blueDartFacadeImpl" class="com.techouts.test.BlueDartFacadeImpl">
+	<property name="courie" ref="courier"/>
+	</bean>
+	
+	
+	
+
+	<!-- loading properties file -->
+	<!-- <context:property-placeholder
+		properties-ref="myProps" />
+	<bean id="myProps"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="location" value="classpath:config.properties" />
+	</bean>
+	loading mongo database
+	<mongo:mongo host="${mongo.host.name}" port="27017" id="mongo">
+	</mongo:mongo>
+	<mongo:db-factory dbname="${databaseName}" mongo-ref="mongo"
+		id="mongoDbFactory"></mongo:db-factory>
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"></constructor-arg>
+	</bean>
+	threadpool executor
+	<bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<property name="corePoolSize" value="5" />
+		<property name="maxPoolSize" value="10" />
+		<property name="WaitForTasksToCompleteOnShutdown" value="true" />
+	</bean>
+	mail authentication details
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com" />
+		<property name="username" value="${sender.addr}" />
+		<property name="password" value="${emailPassword}" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.host">smtp.gmail.com</prop>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.socketFactory.port">465</prop>
+				<prop key="mail.smtp.socketFactory.class">javax.net.ssl.SSLSocketFactory</prop>
+				<prop key="mail.smtp.port">465</prop>
+			</props>
+		</property>
+	</bean>
+	mail service
+	<bean id="ftpMailService" class="com.techouts.hp.service.impl.FtpMailService">
+		<property name="javaMailSenderImpl" ref="mailSender"></property>
+		<property name="toAddress" value="${recipient.addr}"></property>
+		<property name="fromAddress" value="${sender.addr}"></property>
+		<property name="ccAddress" value="${recipient.cc}"></property>
+		<property name="bccAddress" value="${mail.bcc}"></property>
+	</bean>
+
+	<bean id="flectronicsFtpServiceImpl" class="com.techouts.hp.service.impl.FlectronicsFtpServiceImpl" />
+	<bean id="techoutsFtpServiceImpl" class="com.techouts.hp.service.impl.TechoutsFtpServiceImpl" />
+	<bean id="dOIServiceImpl" class="com.techouts.hp.service.impl.DOIServiceImpl" />
+	<bean id="pcOpenOrdersServiceImpl" class="com.techouts.hp.service.impl.PcOpenOrdersServiceImpl" />
+	<bean id="pcShipmentsToHpService" class="com.techouts.hp.service.impl.PcShipmentsToHpServiceImpl" />
+	<bean id="poFromHpServiceImpl" class="com.techouts.hp.service.impl.PoFromHpServiceImpl" />
+	<bean id="ppbPcServiceImpl" class="com.techouts.hp.service.impl.PpbPcServiceImpl" />
+	<bean id="intendedBomServiceImpl" class="com.techouts.hp.service.impl.IntendedBomServiceImpl" />
+	<bean id="amlavCostedBomReportSummaryServiceImpl"
+		class="com.techouts.hp.service.impl.AmlavCostedBomReportSummaryServiceImpl" />
+	<bean id="bomAvReportPeriodServiceImpl"
+		class="com.techouts.hp.service.impl.BomAvReportPeriodServiceImpl" />
+	<bean id="bomFullReportPeriodServiceImpl"
+		class="com.techouts.hp.service.impl.BomFullReportPeriodServiceImpl" />
+	<bean id="ftpUtil" class="com.techouts.hp.util.FtpUtil">
+		<property name="doiService" ref="dOIServiceImpl"></property>
+		<property name="pcOpenorderService" ref="pcOpenOrdersServiceImpl"></property>
+		<property name="pcshipmentsHpService" ref="pcShipmentsToHpService"></property>
+		<property name="pofromhpService" ref="poFromHpServiceImpl"></property>
+		<property name="ppbPcService" ref="ppbPcServiceImpl"></property>
+		<property name="intendedBomService" ref="intendedBomServiceImpl"></property>
+		<property name="amlAvcostedBomService" ref="amlavCostedBomReportSummaryServiceImpl"></property>
+		<property name="bomAvReportPeriodServiceImpl" ref="bomAvReportPeriodServiceImpl"></property>
+		<property name="bomFullReportPeriodServiceImpl" ref="bomFullReportPeriodServiceImpl"></property>
+	</bean>
+
+	<bean id="dataDaoImpl" class="com.techouts.hp.dao.impl.DataDaoImpl" />
+
+	<bean id="bomDaoImpl" class="com.techouts.hp.dao.impl.BomDaoImpl" />
+
+	spring security
+	<sec:http auto-config="true" use-expressions="true">
+		<sec:intercept-url pattern="/index" access="hasRole('ROLE_SALES')" />
+		<sec:intercept-url pattern="/PaIoDataprocess"
+			access="hasRole('ROLE_SALES')" />
+		<sec:intercept-url pattern="/rawdataprocess" access="hasRole('ROLE_SALES')" />
+		<sec:intercept-url pattern="/rawdatauploadstatus"
+			access="hasRole('ROLE_SALES')" />
+		<sec:intercept-url pattern="/home" access="hasRole('ROLE_SALES')" />
+		<sec:intercept-url pattern="/resources/**" access="permitAll" />
+		<sec:form-login login-page="/login" default-target-url="/loginsucess"
+			always-use-default-target="true" authentication-failure-url="/login" />
+		<sec:logout logout-success-url="/login?logout=1"
+			invalidate-session="true" />
+	</sec:http>
+
+	<sec:authentication-manager alias="authenticationManager">
+		<sec:authentication-provider ref="customAuthenticationProvider" />
+	</sec:authentication-manager> -->
+</beans>

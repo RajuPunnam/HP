@@ -1,0 +1,316 @@
+package com.techouts.service;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.techouts.dao.FtpDao;
+import com.techouts.dao.PoFromHpDao;
+import com.techouts.pojo.FileUploadInfo;
+import com.techouts.pojo.PoFromHpPojo;
+import com.techouts.pojo.ReportSummary;
+
+@Service
+public class PoFromHpService {
+
+	static final Logger LOGGER = Logger.getLogger(PoFromHpService.class);
+	final SimpleDateFormat requiredDateFormat = new SimpleDateFormat(
+			"MM-dd-yyyy");
+	final SimpleDateFormat existedFormat = new SimpleDateFormat("dd/MM/yyyy");
+	@Autowired
+	private PoFromHpDao poFromHpDao;
+	@Autowired
+	private FtpDao ftpDao;
+	@Autowired
+	private FtpMail ftpMail;
+	@Resource(name = "myProps")
+	private Properties properties;
+
+	private final String POFROM_HP_HEADER[] = { "PO Received Date", "Aging",
+			"PO", "SO", "Customer", "PL", "SKU", "Family", "Total", "Delta",
+			"Status", "Novo ETS", "Split", "OM Comments" };
+	List<String> pofromhpHeadersList = Arrays.asList(POFROM_HP_HEADER);
+
+
+	public FileUploadInfo getUploadPoFromHpData(File inputLocation, FTPFile file) {
+		CSVParser csvFileParser = null;
+		List<PoFromHpPojo> pofromHpList = null;
+		boolean uploadStatus = false;
+		FileUploadInfo fileUploadInfo=new FileUploadInfo();
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withFirstRecordAsHeader()
+				.withDelimiter(';').withAllowMissingColumnNames(true)
+				.withIgnoreEmptyLines(true);
+		String fileDate = getPoFromHpFileDate(file);
+
+		try {
+			csvFileParser = new CSVParser(new FileReader(inputLocation
+					+ File.separator + file.getName()), csvFileFormat);
+			if (findHeaders(csvFileParser.getHeaderMap()) <= pofromhpHeadersList.size()/2) {
+				csvFileFormat = null;
+				csvFileFormat = CSVFormat.DEFAULT.withHeader(POFROM_HP_HEADER)
+						.withDelimiter(';').withAllowMissingColumnNames()
+						.withIgnoreEmptyLines(true);
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + file.getName()), csvFileFormat);
+			}
+		} catch (IllegalArgumentException illegalArgumentException) {
+			csvFileFormat = null;
+			csvFileFormat = CSVFormat.DEFAULT.withHeader(POFROM_HP_HEADER)
+					.withDelimiter(';').withAllowMissingColumnNames()
+					.withIgnoreEmptyLines(true);
+			try {
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + file.getName()), csvFileFormat);
+			} catch (Exception exception) {
+				LOGGER.error(exception.getMessage());
+			}
+		} catch (Exception exception) {
+			LOGGER.error(exception.getMessage());
+		}
+		try {
+			List<CSVRecord> orderRecordsList = csvFileParser.getRecords();
+			if (orderRecordsList != null && orderRecordsList.size() > 0) {
+				pofromHpList = new ArrayList<PoFromHpPojo>();
+				for (int i = 0; i < orderRecordsList.size(); i++) {
+					CSVRecord orderRecord = orderRecordsList.get(i);
+					if (!pofromhpHeadersList.contains(orderRecord
+							.get("PO Received Date"))
+							&& !pofromhpHeadersList.contains(orderRecord
+									.get("SKU"))
+							&& !pofromhpHeadersList.contains(orderRecord
+									.get("Aging"))) {
+						PoFromHpPojo poFromHpDto = new PoFromHpPojo();
+						poFromHpDto.setFile_Date(fileDate);
+						if (orderRecord.isMapped("PO Received Date")) {
+							if (orderRecord.isSet("PO Received Date")) {
+								String poReceivedDate = orderRecord
+										.get("PO Received Date");
+								if (poReceivedDate != null) {
+									poReceivedDate = poReceivedDate.trim()
+											.replaceAll("[',',' ','.']", "");
+									if (!poReceivedDate.equals("")) {
+										if (poReceivedDate
+												.matches("^[0-9/]*$*")) {
+											poFromHpDto
+													.setPO_Received_Date(requiredDateFormat
+															.format(existedFormat
+																	.parse(poReceivedDate)));
+										} else {
+											poFromHpDto
+													.setPO_Received_Date(poReceivedDate);
+										}
+									}
+								}
+							}
+						}
+						if (orderRecord.isMapped("Aging")) {
+							if (orderRecord.isSet("Aging")) {
+								double aging = 0;
+								String AGING = orderRecord
+										.get("Aging");
+								if (AGING != null) {
+									AGING = AGING.trim().replaceAll("[',',' ','.']", "");
+									if (!AGING.equals("")
+											&& AGING.matches("^[0-9]*$*")) {
+										aging = Double.valueOf(AGING);
+									}
+								}
+								poFromHpDto.setAging(aging);
+							}
+						}
+						if (orderRecord.isMapped("PO")) {
+							if (orderRecord.isSet("PO")) {
+								String PO = orderRecord
+										.get("PO");
+								double po = 0;
+								if (PO != null) {
+									PO = PO.trim().replaceAll("[',',' ','.']", "");
+									if (!PO.equals("")
+											&& PO.matches("^[0-9]*$*")) {
+										po = Double.parseDouble(PO);
+									}
+								}
+								poFromHpDto.setPO(po);
+							}
+						}
+						if (orderRecord.isMapped("SO")) {
+							if (orderRecord.isSet("SO")) {
+								String SO = orderRecord
+										.get("SO");
+								double so = 0;
+								if (SO != null) {
+									SO = SO.trim().replaceAll("[',',' ','.']", "");
+									if (!SO.equals("")
+											&& SO.matches("^[0-9]*$*")) {
+										so = Double.parseDouble(SO);
+									}
+
+								}
+								poFromHpDto.setSO(so);
+							}
+						}
+						if (orderRecord.isMapped("Customer")) {
+							if (orderRecord.isSet("Customer")) {
+								String customer = orderRecord
+										.get("Customer");
+								poFromHpDto.setCustomer(customer.trim());
+							}
+						}
+						if (orderRecord.isMapped("PL")) {
+							if (orderRecord.isSet("PL")) {
+								String PL = orderRecord
+										.get("PL");
+								poFromHpDto.setPL(PL.trim());
+							}
+						}
+						if (orderRecord.isMapped("SKU")) {
+							if (orderRecord.isSet("SKU")) {
+								String sku = orderRecord
+										.get("SKU");
+								poFromHpDto.setSKU(sku.trim());
+							}
+						}
+						if (orderRecord.isMapped("Family")) {
+							if (orderRecord.isSet("Family")) {
+								String family = orderRecord
+										.get("Family");
+								poFromHpDto.setFamily(family.trim());
+							}
+						}
+						if (orderRecord.isMapped("Total")) {
+							if (orderRecord.isSet("Total")) {
+								double total = 0;
+								String TOTAL = orderRecord
+										.get("Total");
+								if (TOTAL != null) {
+									TOTAL = TOTAL.trim().replaceAll("[',',' ','.']", "");
+									if (!TOTAL.equals("")
+											&& TOTAL.matches("^[0-9]*$*")) {
+										total = Double.valueOf(TOTAL);
+									}
+								}
+								poFromHpDto.setTotal(total);
+							}
+						}
+						if (orderRecord.isMapped("Delta")) {
+							if (orderRecord.isSet("Delta")) {
+								int delta = 0;
+								String DELTA = orderRecord
+										.get("Delta");
+								if (DELTA != null) {
+									DELTA = DELTA.trim().replaceAll("[',',' ','.']", "");
+									if (!DELTA.equals("")
+											&& DELTA.matches("^[0-9]*$*")) {
+										delta = Integer.valueOf(DELTA);
+									}
+								}
+								poFromHpDto.setDelta(delta);
+							}
+						}
+						if (orderRecord.isMapped("Status")) {
+							if (orderRecord.isSet("Status")) {
+								String status = orderRecord
+										.get("Status");
+								poFromHpDto.setStatus(status.trim());
+							}
+						}
+						if (orderRecord.isMapped("Novo ETS")) {
+							if (orderRecord.isSet("Novo ETS")) {
+								String novoEts = orderRecord
+										.get("Novo ETS");
+								if (novoEts != null) {
+									novoEts = novoEts.trim()
+											.replaceAll("[',',' ','.']", "");
+									if (!novoEts.equals("")
+											&& novoEts.matches("^[0-9/]*$*")) {
+										poFromHpDto.setETS(requiredDateFormat
+												.format(existedFormat
+														.parse(novoEts)));
+									} else {
+										poFromHpDto.setETS(novoEts);
+									}
+								}
+							}
+						}
+
+						if (orderRecord.isMapped("Split")) {
+							if (orderRecord.isSet("Split")) {
+								String split = orderRecord
+										.get("Split");
+								poFromHpDto.setSplit(split.trim());
+							}
+						}
+						if (orderRecord.isMapped("OM Comments")) {
+							if (orderRecord.isSet("OM Comments")) {
+								String om_comments = orderRecord
+										.get("OM Comments");
+								poFromHpDto.setOm_Comments(om_comments.trim());
+							}
+						}
+						pofromHpList.add(poFromHpDto);
+					}
+				}
+				if (pofromHpList != null && pofromHpList.size() > 0) {
+					uploadStatus = poFromHpDao.getUploadcsvData(pofromHpList);
+					if (uploadStatus) {
+						ReportSummary reportSummary = new ReportSummary();
+						reportSummary.setCollectionName(properties.getProperty("pofromhp.pc.collectionname"));
+						reportSummary.setLastUploadedFileDate(fileDate);
+						ftpDao.getUpDateReportSummary(reportSummary);
+					}
+				}
+				fileUploadInfo.setRecordsCount(pofromHpList.size());
+				fileUploadInfo.setUploadStatus(uploadStatus);
+			}
+		} catch (NullPointerException nullPointerException) {
+			LOGGER.error(nullPointerException.getMessage());
+		} catch (Exception exception) {
+			LOGGER.error(exception.getMessage());
+		} finally {
+			if (csvFileParser != null) {
+				try {
+					csvFileParser.close();
+				} catch (IOException e) {
+
+					LOGGER.error(e.getMessage());
+				}
+			}
+		}
+		return fileUploadInfo;
+	}
+
+	public String getPoFromHpFileDate(FTPFile file) {
+		String fileDate = file.getName().substring(2, 10);
+		return fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-"
+				+ fileDate.substring(0, 4);
+	}
+
+	public int findHeaders(Map<String, Integer> headerMap) {
+		int matchdHeadersCount = 0;
+		List<String> pofromhpHeadersList = Arrays.asList(POFROM_HP_HEADER);
+		for (Entry<String, Integer> header : headerMap.entrySet()) {
+			if (pofromhpHeadersList.contains(header.getKey())) {
+				matchdHeadersCount++;
+			}
+		}
+		return matchdHeadersCount;
+	}
+
+}

@@ -1,0 +1,76 @@
+package com.techouts.workerthread;
+
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.net.ftp.FTPClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.techouts.pojo.FtpSupport;
+import com.techouts.service.DoiService;
+import com.techouts.service.FtpService;
+import com.techouts.service.OperatingStstem;
+
+@Component
+public class DoiWorkerThread implements Runnable {
+	int count = 0;
+	private static final Log LOGGER = LogFactory.getLog(DoiWorkerThread.class);
+	@Autowired
+	private FtpService ftpService;
+	@Resource(name = "myProps")
+	private Properties properties;
+	@Autowired
+	private DoiService doiService;
+	@Autowired
+	OperatingStstem operatingStstem;
+	private boolean methodCompleationStatus;
+
+	@Override
+	public synchronized void run() {
+		int fileUploadCount = 0;
+		count++;
+		System.out.println(count + " came into doi");
+		FtpSupport ftpSupport = new FtpSupport();
+		ftpSupport.setServerAddress(properties.getProperty("flectronics.ftp.server"));
+		ftpSupport.setUserName(properties.getProperty("flextronics.ftp.userId"));
+		ftpSupport.setPassword(properties.getProperty("flectronice.ftp.password"));
+		ftpSupport.setStaticFileDate(properties.getProperty("doi.static.file.date"));
+		ftpSupport.setCollectionName(properties.getProperty("doi.collectionName"));
+		ftpSupport.setDownLoadDirectory(operatingStstem.getOperatoingSystemDownloadPath());
+		ftpSupport.setFieldName("Date");
+		ftpSupport.setSubFolder(properties.getProperty("sub.folder.doi"));
+		ftpSupport.setMailSubject(properties.getProperty("doi.mail.subject"));
+		ftpSupport.setMailBody(properties.getProperty("doi.mail.body"));
+		ftpSupport.setFileType(".xl");
+		try {
+			FTPClient ftpClient = new FTPClient();
+			if (ftpClient.isConnected()) 
+			{
+				ftpClient.logout();
+				ftpClient.disconnect();
+			}
+			methodCompleationStatus=false;
+			fileUploadCount = ftpService.getDownloadFtpFiles(ftpSupport,0);
+		} catch (Exception exception) {
+			LOGGER.error(exception.getMessage());
+		}
+		/*if (fileUploadCount > 0) {
+			LOGGER.info(fileUploadCount + " files found today ");
+			doiService.generateDOI(properties);
+		} else {
+			LOGGER.info(fileUploadCount + " no files found  ");
+		}*/
+
+		methodCompleationStatus = true;
+
+	}
+
+	public boolean getDoiDownloadMethodCompleationStatus() {
+		return methodCompleationStatus;
+	}
+
+}

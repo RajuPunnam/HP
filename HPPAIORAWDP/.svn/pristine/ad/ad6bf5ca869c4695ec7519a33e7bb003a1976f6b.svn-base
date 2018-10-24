@@ -1,0 +1,72 @@
+package com.techouts.workerthread;
+
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.techouts.pojo.FtpSupport;
+import com.techouts.service.FtpService;
+import com.techouts.service.OperatingStstem;
+
+@Component
+public class PoFromHpWorkerThread implements Runnable {
+	final static Logger LOGGER = Logger.getLogger(PoFromHpWorkerThread.class);
+	int count = 0;
+	@Autowired
+	private OperatingStstem operatingStstem;
+	@Autowired
+	private FtpService ftpService;
+	@Resource(name = "myProps")
+	private Properties properties;
+	private boolean methodCompStatus;
+
+	@Override
+	public synchronized void run() {
+		int fileUploadCount = 0;
+		count++;
+		System.out.println(count + " th time came into pfromhp");
+		FtpSupport ftpSupport = new FtpSupport();
+		ftpSupport.setServerAddress(properties.getProperty("flectronics.ftp.server"));
+		ftpSupport.setUserName(properties.getProperty("flextronics.ftp.userId"));
+		ftpSupport.setPassword(properties.getProperty("flectronice.ftp.password"));
+		ftpSupport.setStaticFileDate(properties
+				.getProperty("pofromhp.static.date"));
+		ftpSupport.setCollectionName(properties
+				.getProperty("pofromhp.pc.collectionname"));
+		ftpSupport.setDownLoadDirectory(operatingStstem.getOperatoingSystemDownloadPath());
+		ftpSupport.setFieldName("File Date");
+		ftpSupport.setSubFolder(properties.getProperty("sub.folder.pofromhp"));
+		ftpSupport.setMailSubject(properties
+				.getProperty("pofromhp.mail.subject"));
+		ftpSupport.setMailBody(properties.getProperty("doi.mail.body"));
+		ftpSupport.setFileType(".xl");
+		try {
+			FTPClient ftpClient = new FTPClient();
+			if (ftpClient.isConnected()) {
+				ftpClient.logout();
+				ftpClient.disconnect();
+			}
+			methodCompStatus=false;
+			fileUploadCount = ftpService.getDownloadFtpFiles(ftpSupport,0);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+		}
+		if (fileUploadCount > 0) {
+			LOGGER.info(fileUploadCount + " new files found");
+		} else {
+			LOGGER.info("NO files found");
+		}
+
+		methodCompStatus = true;
+	}
+
+	public boolean getDoiDownloadMethodCompleationStatus() {
+		return methodCompStatus;
+	}
+
+}

@@ -1,0 +1,118 @@
+package com.techouts.service;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.poi.hssf.util.CellRangeAddress;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.techouts.dao.FtpDao;
+import com.techouts.pojo.FileStatus;
+
+@Service
+public class StatusService
+{
+@Autowired
+private FtpDao ftpDao;
+@Autowired
+private OperatingStstem operatingStstem;
+@Resource(name = "myProps")
+private Properties properties;
+public String getUploadedDataInfo() throws IOException
+{
+	Cell cell;
+	List<FileStatus> filesList=ftpDao.getUplodedFilesList();
+	XSSFWorkbook workbook=new XSSFWorkbook();
+	CellStyle cellStyle = workbook.createCellStyle();
+	CreationHelper createHelper = workbook.getCreationHelper();
+	CellStyle style = workbook.createCellStyle();
+    style.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+    style.setFillPattern(CellStyle.SOLID_FOREGROUND);
+    CellStyle rowStyle = workbook.createCellStyle();
+    rowStyle.setFillBackgroundColor(IndexedColors.RED.getIndex());
+    rowStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+    Font font = workbook.createFont();font.setColor(IndexedColors.RED.getIndex());
+    style.setFont(font);
+	cellStyle.setDataFormat(createHelper.createDataFormat().getFormat("mm/DD/yyyy hh:mm:ss"));
+	XSSFSheet sheet=workbook.createSheet("DataStatus");
+	XSSFRow row=sheet.createRow(0);
+	cell=row.createCell(0);
+	cell.setCellStyle(style);
+	cell.setCellValue("FTP Location");
+	cell=row.createCell(4);
+	cell.setCellStyle(style);
+	cell.setCellValue("Source Folder");
+	cell=row.createCell(8);
+	cell.setCellStyle(style);
+	cell.setCellValue("File Name");
+	cell=row.createCell(12);
+	cell.setCellStyle(style);
+	cell.setCellValue("UpLoad Status");
+	cell=row.createCell(16);
+	cell.setCellStyle(style);
+	cell.setCellValue("File Received Date");
+	cell=row.createCell(20);
+	cell.setCellStyle(style);
+	cell.setCellValue("File UpLoad Date");
+	cell=row.createCell(24);
+	cell.setCellStyle(style);
+	cell.setCellValue("No Of Records");
+	sheet.addMergedRegion(new CellRangeAddress(0, 1,0,3));
+	sheet.addMergedRegion(new CellRangeAddress(0, 1,4,7));
+	sheet.addMergedRegion(new CellRangeAddress(0, 1,8,11));
+	sheet.addMergedRegion(new CellRangeAddress(0, 1,12,15));
+	sheet.addMergedRegion(new CellRangeAddress(0, 1,16,19));
+	sheet.addMergedRegion(new CellRangeAddress(0, 1,20,23));
+	sheet.addMergedRegion(new CellRangeAddress(0, 1,24,27));
+	for(int i=0;i<filesList.size();i++)
+	{
+	row=sheet.createRow(i+2);
+	row.createCell(0).setCellValue(filesList.get(i).getFtpLocation());
+	row.createCell(4).setCellValue(filesList.get(i).getSourceFolder());
+	row.createCell(8).setCellValue(filesList.get(i).getFileName());
+	row.createCell(12).setCellValue(filesList.get(i).isUploadStatus());
+	cell=row.createCell(16);
+	cell.setCellStyle(cellStyle);
+	cell.setCellValue(filesList.get(i).getFileReceivedDate());
+	cell=row.createCell(20);
+	cell.setCellStyle(cellStyle);
+	cell.setCellValue(filesList.get(i).getFileUploadedDate());
+	row.createCell(24).setCellValue(filesList.get(i).getNoOfRecords());
+	sheet.addMergedRegion(new CellRangeAddress(i+1, i+1,0,3));
+	sheet.addMergedRegion(new CellRangeAddress(i+1, i+1,4,7));
+	sheet.addMergedRegion(new CellRangeAddress(i+1, i+1,8,11));
+	sheet.addMergedRegion(new CellRangeAddress(i+1, i+1,12,15));
+	sheet.addMergedRegion(new CellRangeAddress(i+1, i+1,16,19));
+	sheet.addMergedRegion(new CellRangeAddress(i+1, i+1,20,23));
+	sheet.addMergedRegion(new CellRangeAddress(i+1, i+1,24,27));
+	}
+	String location=operatingStstem.getOperatoingSystemDownloadPath()+File.separator+properties.getProperty("main.folder");
+	File filePath=new File(location);
+	if(!filePath.exists())
+	{
+		filePath.mkdirs();
+	}
+	FileOutputStream outputStream=new FileOutputStream(filePath+File.separator+"todaystatus.xlsx");
+	workbook.write(outputStream);
+	if(outputStream!=null)
+	{
+		outputStream.close();
+	}
+	return filePath+File.separator+"todaystatus.xlsx";
+}
+}

@@ -1,0 +1,73 @@
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@page isELIgnored="false" %>
+
+<html>
+<head>
+<script type="text/javascript">
+	$document.ready(function(){
+		$( "#hiddenReferesh" ).click();
+	});
+</script>
+</head>
+<body id="rptSmry">
+	<form id="rptSmryFrm">
+		<div style="float: right; position: fixed"></div>
+		<br>
+
+		<div align="center" style="margin-top: 50px">
+			<img alt="HP Cleverplan" src="new_hp_logo_1.jpg" width="120px"><label
+				style="font-family: Arial;"><h1>Data upload status</h1></label>
+		</div>
+		<br /> <br />
+		<br /> <br />
+		<div id="tbldiv" align="center">
+			<table id="smryTbl" border="1" bordercolor="black"
+				style="font-family: Arial; font-size: 14px; text-align: center; width: 500px;">
+				<tr style="font-weight: bold; padding: 10px">
+					<td><span>Collection name</span></td>
+					<td><span>Last updated Date</span></td>
+				</tr>
+		<c:forEach items="${reportmap}" var="reportmap">		
+				<tr style="padding: 10px">
+					<td>${reportmap.key}</td>
+					<td>${reportmap.value}</td>
+				</tr>
+		</c:forEach>
+			</table>
+		</div>
+		<br />
+		
+				<div id="tbldiv" align="center">
+				<label
+				style="font-family: Arial;"><h1>Today upload File status</h1></label>
+			<table id="smryTbl" border="1" bordercolor="black"
+				style="font-family: Arial; font-size: 14px; text-align: center; width: 500px;">
+				<tr style="font-weight: bold; padding: 10px">
+					<td><span>File Name</span></td>
+					<td><span>Folder Name</span></td>
+					<td><span>Upload Status</span></td>
+					<td><span>No Of Records</span></td>
+				</tr>
+		<c:forEach items="${currentdayStatus}" var="currentdayStatus">		
+				<tr style="padding: 10px">
+				   <td>${currentdayStatus.key}</td>
+				    <td>${currentdayStatus.value.sourceFolder}</td>
+				    <td>${currentdayStatus.value.uploadStatus}</td>
+					<td>${currentdayStatus.value.noOfRecords}</td>
+				</tr>
+		</c:forEach>
+			</table>
+		</div>
+		<br />
+	<div align="center">
+			<input type="button" value="Click me to refresh"
+				onclick="window.location.reload();">
+		</div>
+	</form>
+	<a style="display:block;text-align:center;padding-top: 20px; " href="PaIoDataprocess" >Back</a>
+</body>
+</html>

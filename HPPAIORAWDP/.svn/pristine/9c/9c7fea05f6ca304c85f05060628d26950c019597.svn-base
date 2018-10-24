@@ -1,0 +1,134 @@
+package com.techouts.dao;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.stereotype.Repository;
+
+import com.techouts.pojo.BomStatus;
+import com.techouts.pojo.FileStatus;
+import com.techouts.pojo.ReportSummary;
+
+@Repository
+public class FtpDao {
+
+	@Autowired
+	private MongoTemplate mongoTemplate;
+	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+			"MM-dd-yyyy");
+
+	public List<String> getFileDates(String collectionName,
+			String fieldName) {
+		List<String> dateList = mongoTemplate.getCollection(collectionName)
+				.distinct(fieldName);
+		return dateList;
+	}
+
+	public void getUpDateReportSummary(ReportSummary reportSummary)
+			throws ParseException {
+	
+		if (mongoTemplate.getCollection("UploadStatus").count()>0)
+		{
+			Query query = new Query(Criteria.where("Collection Name").is(reportSummary.getCollectionName()));
+			ReportSummary oldRecord = mongoTemplate.findOne(query,
+					ReportSummary.class, "UploadStatus");
+			if (oldRecord != null) 
+			{
+				if (simpleDateFormat.parse(
+						reportSummary.getLastUploadedFileDate()).after(
+						simpleDateFormat.parse(oldRecord
+								.getLastUploadedFileDate()))) {
+					Update update = new Update();
+					query=new Query();
+					query.addCriteria(Criteria.where("Latest File Date").is(
+							oldRecord.getLastUploadedFileDate()));
+					update.set("Latest File Date",
+							reportSummary.getLastUploadedFileDate());
+					mongoTemplate.updateFirst(query, update,
+							ReportSummary.class);
+				}
+			} else {
+				mongoTemplate.insert(reportSummary);
+			}
+		} else {
+			mongoTemplate.insert(reportSummary);
+		}
+	}
+
+	public List<ReportSummary> getfileUploadStatusList() {
+		return mongoTemplate.findAll(ReportSummary.class);
+
+	}
+
+	public void savFileInfo(FileStatus status)
+	{
+		mongoTemplate.insert(status);
+	}
+	public List<FileStatus> getUplodedFilesList()
+	{
+		Calendar now = Calendar.getInstance();
+        now.set(Calendar.HOUR, 0);
+        now.set(Calendar.MINUTE, 0);
+        now.set(Calendar.SECOND, 0);
+		Query query=new Query();
+		query.with(new Sort(Sort.Direction.ASC,"Source Folder"));
+	    query.addCriteria(Criteria.where("File Upload Date").gte(now.getTime()));
+		return mongoTemplate.find(query,FileStatus.class);
+	}
+	public boolean insertBomsData(List<?> bomList,String collectionName,boolean collectionExists)
+	{
+		boolean upladStatus=false;
+		try
+		{
+		if(mongoTemplate.getCollection(collectionName).count()>0 && collectionExists)
+		{
+			mongoTemplate.dropCollection(collectionName);
+			mongoTemplate.insertAll(bomList);
+		upladStatus=true;
+		}
+		else
+		{
+			mongoTemplate.insertAll(bomList);
+			upladStatus=true;
+		}
+		}catch(Exception exception)
+		{
+			exception.printStackTrace();
+		}
+		return upladStatus;
+	}
+
+	public void updateBomStatus(BomStatus bomStatus) 
+	{
+		Query query = new Query(Criteria.where("Collection").is(bomStatus.getCollection()));
+		if (mongoTemplate.getCollection("BomStatus").count()>0) 
+		{
+			        BomStatus bom = mongoTemplate.findOne(query,BomStatus.class, "BomStatus");
+			        if(bom!=null)
+			        {
+					Update update = new Update();
+					query=new Query();
+					query.addCriteria(Criteria.where("Collection").is(bom.getCollection()));
+					update.set("Status",bomStatus.isCollectionUpdatedStatus());
+					update.set("File Date", bomStatus.getFileDate());
+					mongoTemplate.updateFirst(query, update,BomStatus.class);
+			        } else 
+					{
+			        	mongoTemplate.insert(bomStatus);
+					}
+		}
+		 else
+		 {
+			 mongoTemplate.insert(bomStatus);
+			
+		 }
+	}
+}

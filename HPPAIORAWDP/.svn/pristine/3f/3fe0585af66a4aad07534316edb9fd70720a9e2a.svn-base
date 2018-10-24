@@ -1,0 +1,157 @@
+package com.techouts.pojo;
+
+public class FtpSupport 
+{
+	private String staticFileDate;
+	private String downLoadDirectory;
+	private String subFolder;
+	private String collectionName;
+	private String fieldName;
+	private boolean downloadStatus;
+	private boolean uploadStatus;
+	private String mailSubject;
+	private String mailBody;
+	private int uploadCount;
+	private String fileType;
+	private String serverAddress;
+	private String userName;
+	private String password;
+	private String fileName;
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public String getStaticFileDate()
+	{
+		return staticFileDate;
+	}
+
+	public void setStaticFileDate(String staticFileDate) {
+		this.staticFileDate = staticFileDate;
+	}
+
+	public String getDownLoadDirectory() {
+		return downLoadDirectory;
+	}
+
+	public void setDownLoadDirectory(String downLoadDirectory) {
+		this.downLoadDirectory = downLoadDirectory;
+	}
+
+	public String getSubFolder() {
+		return subFolder;
+	}
+
+	public void setSubFolder(String subFolder) {
+		this.subFolder = subFolder;
+	}
+
+	public String getCollectionName() {
+		return collectionName;
+	}
+
+	public void setCollectionName(String collectionName) {
+		this.collectionName = collectionName;
+	}
+
+	public String getFieldName() {
+		return fieldName;
+	}
+
+	public void setFieldName(String fieldName) {
+		this.fieldName = fieldName;
+	}
+
+	public boolean isDownloadStatus() {
+		return downloadStatus;
+	}
+
+	public void setDownloadStatus(boolean downloadStatus) {
+		this.downloadStatus = downloadStatus;
+	}
+
+	public boolean isUploadStatus() {
+		return uploadStatus;
+	}
+
+	public void setUploadStatus(boolean uploadStatus) {
+		this.uploadStatus = uploadStatus;
+	}
+
+	public int getUploadCount() {
+		return uploadCount;
+	}
+
+	public void setUploadCount(int uploadCount) {
+		this.uploadCount = uploadCount;
+	}
+
+	public String getMailSubject() {
+		return mailSubject;
+	}
+
+	public void setMailSubject(String mailSubject) {
+		this.mailSubject = mailSubject;
+	}
+
+	public String getMailBody() {
+		return mailBody;
+	}
+
+	public void setMailBody(String mailBody) {
+		this.mailBody = mailBody;
+	}
+
+	public String getFileType()
+	{
+		return fileType;
+	}
+
+	public void setFileType(String fileType)
+	{
+		this.fileType = fileType;
+	}
+
+	public String getServerAddress() {
+		return serverAddress;
+	}
+
+	public void setServerAddress(String serverAddress) {
+		this.serverAddress = serverAddress;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	@Override
+	public String toString() {
+		return "FtpSupport [staticFileDate=" + staticFileDate
+				+ ", downLoadDirectory=" + downLoadDirectory + ", subFolder="
+				+ subFolder + ", collectionName=" + collectionName
+				+ ", fieldName=" + fieldName + ", downloadStatus="
+				+ downloadStatus + ", uploadStatus=" + uploadStatus
+				+ ", mailSubject=" + mailSubject + ", mailBody=" + mailBody
+				+ ", uploadCount=" + uploadCount + ", fileType=" + fileType
+				+ ", serverAddress=" + serverAddress + ", userName=" + userName
+				+ ", password=" + password + "]";
+	}
+
+}
