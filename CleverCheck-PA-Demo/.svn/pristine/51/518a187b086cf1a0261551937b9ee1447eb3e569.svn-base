@@ -1,0 +1,608 @@
+/* Website Fonts - HP Simplified */
+
+@font-face {
+	font-family: HPBold;
+	src: url("../fonts/HP_BOLD.OTF") format("opentype");
+}
+
+@font-face {
+	font-family: HPItalic;
+	src: url("../fonts/HP_ITALIC.OTF") format("opentype");
+}
+
+@font-face {
+	font-family: HPLight;
+	src: url("../fonts/HP_LIGHT.OTF") format("opentype");
+}
+
+@font-face {
+	font-family: HPRegular;
+	src: url("../fonts/HP_REGULAR.OTF") format("opentype");
+}
+
+
+body {
+	font-family: 'HPRegular' !important;
+	overflow-x: hidden; 
+	background: -webkit-linear-gradient(#fff, #E6E6E6) !important; /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#fff, #E6E6E6) !important; /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#fff, #E6E6E6) !important; /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#fff, #E6E6E6) !important; /* Standard syntax (must be last) */
+}
+
+.hpblue {
+	background: #0096D6;
+}
+
+.headerHeight {
+  	min-height: 90px !important;
+}
+
+.leftsidebar {
+	min-height: 500px !important;
+}
+
+.clever_plan_text {
+	padding-top: 30%;
+	padding-left: 15%;
+	padding-right: 15%;
+	font-family: HPBold;
+	font-size: 48px;
+	color: #fff;
+}
+
+.clear_plan_caption {
+	padding-left: 15%;
+	padding-right: 15%;
+	color: #fff;
+	font-size: 18px;
+}
+
+#laptop-icon:hover path {
+    fill: red;
+}
+
+.welcome_txt {
+	font-size: 32px;
+	font-family: HPRegular;
+	color: #fff;
+	line-height: 90px;
+}
+
+.heading_txt{
+	font-size: 24px;
+	font-family: HPRegular;
+	color: #fff;
+	line-height: 90px;
+}
+
+.header_txt{
+	font-size: 27px;
+	font-family: HPRegular;
+	color: #fff;
+}
+
+.header1_txt{
+	text-align: center;
+	font-size: 18px;
+	font-family: HPRegular;
+	color: #fff;
+}
+.braziltime, .maintime, .maindate {
+	color: #0096D6;
+	font-style:oblique;
+	
+}
+
+.braziltime2 {
+	color: #0096D6;
+	font-style: oblique;
+	font-size: 24px;
+	
+}
+
+.braziltime3 {
+	color: #B0B0B0;
+	font-style:oblique;
+}
+
+.centerAlign {
+	text-align: center;
+}
+
+.main_content {
+	padding: 50px !important;
+}
+
+.paddingtop {
+	padding-top: 97px;
+	border-color: #0096D6;
+	margin-left: 15px;
+	
+}
+
+.centermargin {
+	clear: both;
+	border-color: #0096D6;
+	width: 118px;
+	font-size: 12px;
+	margin-bottom: 3%;
+	
+}
+
+
+.main-content2 {
+	padding-top: 50px !important;
+	
+}
+
+.right_content {
+	padding-top: 60px;
+	margin: 0 auto;
+	text-align: center;
+}
+
+
+
+.go_button {
+	background: #0096D6 !important;
+	box-shadow: none !important;
+	color: #fff !important;
+	font-family: 'HPRegular';
+}
+
+.footer {
+	margin-top: 10px;
+	border: 2px solid #0096D6;
+	background: #E9EFF1;
+	height: 50px;
+	line-height: 50px;
+}
+
+.Copyright_information_HP_inc_text {
+	display: none;
+	font-size: 16px;
+	text-align: center;
+	color: #0096D6;
+}
+.para_txt {
+    font-size: 20px;
+    color: rgb(0, 150, 214);
+    text-align: center;
+}
+
+.ui-state-default {
+	
+}
+
+.ui-datatable thead th {
+	height: 30px;
+	line-height: 30px;
+	box-shadow: none;
+	background: -moz-linear-gradient(center top , #0096D6, #0096D6) repeat scroll 0% 0% #0096D6;
+	color: #fff;
+
+}
+
+.ui-datatable td {
+	height: 30px;
+	line-height: 30px;
+ 	padding-left: 5px !important;
+}
+
+.image{
+	margin-right: 25%;
+}
+.padding{
+	margin-top:4%;
+}
+.padding-right{
+	padding-right: 15px;
+}
+.header1_txt{
+	text-align: center;
+	font-size: 18px;
+	font-family: HPRegular;
+	color: #fff;
+	line-height: 18px;
+}
+
+.braziltime2 {
+	color: #0096D6;
+	font-style: oblique;
+	font-size: 24px;
+	
+}
+
+.braziltime3 {
+	color: #B0B0B0;
+	font-style:oblique;
+}
+
+
+.para_txt {
+	
+	font-size:18px;
+	color:#0096D6;
+}
+
+.ui-datatable thead th {
+	height: 30px;
+	line-height: 30px;
+	box-shadow: none;
+	background: -moz-linear-gradient(center top , #0096D6, #0096D6) repeat scroll 0% 0% #0096D6;
+	color: #fff;
+
+}
+
+.ui-datatable td, .ui-datatable tfoot td {
+    width: 30px !important;
+    height: 30px;
+    line-height: 15px;
+    font-family: HPLight !important;
+    font-size: 13px;
+}
+}
+
+.unitsneeded {
+	padding-left: 60px !important;
+	border-color: #0096D6;
+}
+
+.ui-datatable thead th {
+    background: #0096D6 !important;
+}
+
+.ui-widget {
+	font-family: HPLight !important;
+
+	}
+
+	
+.border {
+    border: 2px solid #0096D6;
+    margin-top: 10%;
+    text-align: center;
+    font-size: 32px;
+    color: #0096D6;
+    margin-right: 15px !important;
+}
+
+.welcomeButton {
+	 clear: both;
+	 border-color: #0096D6;
+	 width: 198px;
+	 min-height: 76px;
+	 font-size: 16px;
+	 margin-top: 20px;
+}
+
+.text-center{
+ 	text-align: center;
+}
+
+.text{
+	 font-size: 12px;
+	 width: 198px;
+	 color: #0096D6;
+	 font-family: HPLight !important;
+	 text-align: center;
+}
+
+.ui-datatable thead th {
+    background: #0096D6 !important;
+}
+.ui-widget {
+  	font-family: HPRegular !important;
+}
+
+.inputbox {
+	line-height: 30px !important;
+	box-shadow: none !important;
+	font-family: HPItalic !important;
+	color: #767676 !important;
+}
+
+.inputboxwidth {
+	width: 100%;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+
+.NoPadding {
+	padding: 0px !important;
+}
+
+
+
+
+
+
+/* Swapna CSS */
+
+.ui-inputfield, .ui-widget-content .ui-inputfield, .ui-widget-header .ui-inputfield {
+  box-shadow: none !important;
+}
+
+.Cancel{
+	background: #0096D6 !important;
+	box-shadow: none !important;
+	color: #fff !important;
+	font-family: 'HPRegular';
+}
+
+.blocktext2{
+	border: 2px solid #0096D6;
+	text-align: center;
+	min-height: 100px;
+	padding: 37px;
+	
+}
+
+.blocktext3{
+	border: 2px solid #0096D6;
+	text-align: center;
+	min-height: 110px;
+	padding: 36px;
+	
+}
+
+.vertical-border{
+	height:570px;
+	width:1px;
+	border:0px;
+	border-left:3px;
+	border-style:solid;
+	border-color:#0096D6;
+	margin-left: 106%;
+	
+}
+
+.sub-block{
+	width: 80px;
+    color:#fff !important;
+}
+
+.sub-block1{
+	color:#fff !important;
+}
+
+
+.sub-block2{
+	color:#000 !important;
+	
+}
+
+
+.x-panel-body{
+	 background-color: #eb7b31 !important;
+	 color: #fff;
+	 padding: 10px;
+	 text-align: center;
+	 margin-top: 5px;
+}
+
+.y-panel-body{
+	 background-color: #5b9bd4 !important;
+	 color: #fff;
+	 padding: 10px;
+	 text-align: center;
+	margin-top: 5px;
+}
+
+.z-panel-body{
+	background-color: #5b9bd4 !important;
+	color: #fff;
+	padding: 10px;
+	text-align: center;
+	margin-top: 5px;
+}
+
+.font-size{
+	 font-size:20px;
+	 margin-bottom: 1px;
+}
+
+.blockHeading {
+	font-family: HPLight;
+	margin-top: 5px;
+	width: 100%;
+	color: #FFF;
+	font-size: 15px;
+	text-transform: capitalize;
+	background: #0096D6 none repeat scroll 0% 0%;
+	padding: 3px 3px 3px 6px;
+}
+
+.blockContent {
+	 font-family: HPLight;
+	 padding-top: 5px;
+	 width: 100%;
+	 font-size: 12px;
+	 border: 1px solid #0096D6 !important;
+	 padding: 5px;
+}
+
+.NOP {
+	 /* padding-left: 0px !important; */
+	 padding-right: 0px !important;
+}
+
+.blockHeader{
+	background: #0096D6;
+	color: #FFF;
+	padding: 5px;
+	font-family: HPLight !important;
+	font-size: 18px;
+	margin-top: 10px;
+}
+
+.blockHeading1 {
+	font-size: 14px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+.blocktext{
+	 font-size: 12px;
+}
+.headercolor1{
+	 background:#ADD8E6;
+	 border: 1px solid  #0096D6;
+	 padding:2%;
+}
+
+
+.NO{
+   padding-left: 0px !important;
+   margin-right: -9px;  
+}
+
+.controlheader{
+	border: 2px solid rgb(0, 150, 214);;
+	margin-top: 1% !important;
+	text-align: center;
+	font-size: 32px;
+	color: rgb(0, 150, 214);
+}
+
+.controlsub{
+	text-align: center;
+	border: 1px solid #0096D6;
+	background: #0096D6;
+	color: #fff;
+	font-size: 15px;
+	margin-bottom: 0.4%;
+	width: 96%;
+	margin-left: 2%;
+} 
+
+.dtc{
+	font-size: 9px !important;
+	font-family: HPlight;
+	text-align: center;
+	color:#fff !important;
+}
+
+.dt{
+	font-size: 13px !important;
+	font-family: HPlight;
+	text-align: center;
+	color:#fff !important;
+}
+
+#dtv{
+	background: #0096D6;
+}
+
+/* Swapna CSS END */
+
+
+
+
+/* sadhana css */
+
+.table1 {
+	border: 2px solid #0096D6 !important;
+	text-align: left !important;
+	min-height: 2px;
+	padding: 2%;
+	margin-left: 9%;
+    margin-right: 6%;
+   
+	
+}
+.HeaderText {
+	background: #0096D6; 
+	color: #fff; 
+	margin: 79px 22px 13px 29px !important; 
+    height: 67px; 
+	line-height: 49px; 
+	font-size: 17px; 
+	font-family: HPBold;
+	text-align: center;
+}
+
+.Text1 {
+	background: #0096D6 !important; 
+	color: #fff !important; 
+	margin: 66px 14px 6px 13px !important; 
+    height: 67px !important; 
+	line-height: 49px !important; 
+	font-size: 17px !important; 
+	font-family: HPBold !important;
+	text-align: center !important;
+	padding-top: 10px !important;
+	
+}
+.Text2 {
+	background: #0096D6 !important; 
+	color: #fff !important;
+	margin-top :65px;
+	height: 67px !important; 
+	line-height: 49px !important; 
+	font-size: 17px !important; 
+	font-family: HPBold !important;
+	text-align: center !important;
+	margin-left: -8px !important;
+    margin-right: 58px;
+	margin-bottom: 22px !important;
+	padding-top: 10px !important;
+}
+
+.label {
+	margin-bottom: 1px;
+	margin-right: 9px;
+}
+
+.Text {
+	background: #0096D6 !important; 
+	color: #fff !important; 
+	margin: 64px 82px 19px -30px !important; 
+    height: 67px !important; 
+	line-height: 49px !important; 
+	font-size: 17px !important; 
+	font-family: HPBold !important;
+	text-align: center !important;
+	margin-bottom: 17px;
+	padding-top: 10px !important;
+}
+
+.Go{
+	background: #0096D6 !important;
+	box-shadow: none !important;
+	color: #fff !important;
+	font-family: 'HPRegular';
+	float:right;
+	margin-right: -32px;
+	margin-top: -45px
+}
+
+.Message_button{
+	background: #0096D6 !important;
+	box-shadow: none !important;
+	color: #fff !important;
+	font-family: 'HPRegular';
+	padding: 16px 112px;
+    margin-top: -34px;
+}
+
+
+/* sadhana CSS END */
+
+
+
+
+
+.sidebarheading_text {
+	height: 30px;
+	line-height: 30px;
+	color: #0096D6;
+	font-size: 18px;
+	font-family: HPLight;
+}
+
+.leadMargin {
+	margin-top: 10px;
+}

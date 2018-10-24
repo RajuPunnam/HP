@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xmlns:sec="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans.xsd 						
+						http://www.springframework.org/schema/context       
+                        http://www.springframework.org/schema/context/spring-context-4.0.xsd						
+						http://www.springframework.org/schema/security
+          				http://www.springframework.org/schema/security/spring-security.xsd          				
+          				http://www.springframework.org/schema/data/mongo 
+                        http://www.springframework.org/schema/data/mongo/spring-mongo-1.5.xsd">
+
+						
+	<!-- Enable Spring Annotation Configuration -->
+	<context:annotation-config />
+	
+	<!-- Scan for all of Spring components such as Spring Service -->
+	<context:component-scan base-package="com.techouts.dao" />
+	<context:component-scan base-package="com.techouts.services" />
+	<context:component-scan base-package="com.techouts.io" />
+	<context:component-scan base-package="com.techouts.re" />
+	
+	
+	<context:property-placeholder properties-ref="myProps"/>
+	<bean id="myProps" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+    <property name="location" value="classpath:mail.properties"/>
+    </bean>
+	
+		 
+	<!-- Data Source -->
+	
+		<!-- <mongo:mongo host="localhost" port="27017" id="mongo" />
+		<mongo:db-factory dbname="HPLOCAL" mongo-ref="mongo" id="mongoDbFactory" />  -->
+		
+	<!-- 	<mongo:mongo host="144.76.40.143" port="27017" id="mongo" />
+		<mongo:mongo host="10.0.0.35" port="27017" id="mongo" />
+	-->
+
+	 
+    <!--  <mongo:mongo host="hybris.techouts.com" port="27017" id="mongo" />
+	<mongo:db-factory dbname="HPCPSTG" mongo-ref="mongo" id="mongoDbFactory" /> -->
+
+	
+	<!-- <mongo:mongo host="proc.techouts.com" port="27017" id="mongo" />
+  	<mongo:db-factory dbname="HPCleverPlanNew" mongo-ref="mongo" id="mongoDbFactory" /> -->
+  	
+   <!-- <mongo:mongo host="192.168.1.233" port="27017" id="mongo" />
+	<mongo:db-factory dbname="HPTest" mongo-ref="mongo" id="mongoDbFactory" /> -->
+	
+	<!-- <mongo:mongo host="localhost" port="27017" id="mongo" />
+	<mongo:db-factory dbname="HPCPSTG" mongo-ref="mongo" id="mongoDbFactory" />   -->
+	 
+	<!-- <mongo:mongo host="192.168.1.3" port="27017" id="mongo" />
+	<mongo:db-factory dbname="HPCPSTG" mongo-ref="mongo" id="mongoDbFactory" />
+	 -->
+	
+	
+	<mongo:mongo host="localhost" port="27017" id="mongo" />
+	<mongo:db-factory dbname="HPCPSTG" mongo-ref="mongo" id="mongoDbFactory" />  
+	
+	
+	
+	 <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+	     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
+	 </bean>
+	
+	
+	
+	<!-- Transaction Manager -->
+	<!--  <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	
+	
+	Detect @Transactional Annotation
+	<tx:annotation-driven transaction-manager="transactionManager"  proxy-target-class="true" />
+	
+	 -->
+	
+	
+	<!-- Spring Security  -->
+	
+	
+	
+	<sec:http auto-config="true" use-expressions="true">
+	
+		<sec:intercept-url pattern="/TempChangePassword.xhtml" 			access="permitAll" />
+		<sec:intercept-url pattern="/ChangePassword.xhtml" 			access="permitAll" />
+		<sec:intercept-url pattern="/ForgotPasswordRecovery.xhtml" 	access="permitAll" />
+		<sec:intercept-url pattern="/Signup.xhtml" 					access="permitAll" />
+		<sec:intercept-url pattern="/TempChangePassword.xhtml" 			access="permitAll" />
+		<sec:intercept-url pattern="/Resources/**" 					access="permitAll"/>
+		<sec:intercept-url pattern="/faces/javax.faces.resources/**" access="permitAll"/>
+		
+	 	<sec:intercept-url pattern="/index*" access="permitAll"/>
+	 	<sec:intercept-url pattern="/AdminControl.xhtml" access="hasRole('ROLE_ADMIN')" />
+	 	<sec:intercept-url pattern="/Welcome.xhtml" access="hasRole('ROLE_SCM')" />
+	 	<sec:intercept-url pattern="/InventoryOptimization.xhtml" access="hasRole('ROLE_SCM')" />
+        <sec:intercept-url pattern="/**" access="hasRole('ROLE_SALES')" />
+       
+       <sec:headers>
+		<sec:cache-control />
+		<sec:hsts  />
+	   </sec:headers>
+        
+        <sec:form-login 
+        	login-page="/index.html"
+        	
+        	default-target-url="/default"
+        	authentication-success-handler-ref="authSuccessHandler"
+        	always-use-default-target="true"
+        	authentication-failure-url="/index.html?login_error=1"
+        	username-parameter="username"
+        	password-parameter="password"
+        />
+        <sec:logout logout-success-url="/index.html?logout=1" 
+        			invalidate-session="true" />
+    </sec:http>
+     
+    <sec:authentication-manager alias="authenticationManager">
+        <sec:authentication-provider  ref="customAuthentication" >
+            
+            <!-- // static authenticaation
+            	<sec:user-service  >
+                	<sec:user name="admin" password="admin" authorities="ROLE_USER" />
+            	</sec:user-service> 
+            -->
+            
+        </sec:authentication-provider>
+    </sec:authentication-manager> 
+	
+	
+	<bean id="customAuthentication" class="com.techouts.security.CustomAuthenticationProvider" />
+	<bean id="authSuccessHandler" class="com.techouts.security.CustomAuthenticationSuccessHandler" />
+	
+</beans>

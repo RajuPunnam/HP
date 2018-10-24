@@ -1,0 +1,178 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<meta charset="utf-8" />
+	<meta name="description" content="" />
+	<meta name="author" content="" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="viewport"
+		content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="yes" />
+
+	<title>hp CLEVER CHECK</title>
+	<!-- theme fonts -->
+	<link href="resources/assets/bootstrap/css/bootstrap.min.css"
+		rel="stylesheet" />
+	<link href="resources/assets/font-awesome/css/font-awesome.min.css"
+		rel="stylesheet" />
+	<link href="resources/css/app.css" rel="stylesheet" />
+	<script src="resources/js/checkout.js"></script>
+</h:head>
+<h:body style="background-color: #fff;overflow-x: hidden;">
+	<style>
+.ui-growl {
+	top: 121px;
+}
+
+.toplable {
+	font-weight: normal;
+	font-size: 11;
+}
+
+.bottomlable {
+	font-weight: bold;
+	font-size: 16px;
+}
+
+.ui-button-text ui-c {
+	width: 10px;
+}
+
+.ui-widget {
+	font-size: 93%;
+}
+.ui-state-hover {
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    }
+</style>
+	<!-- <h:panelGroup id="header">
+		<ui:include src="/WEB-INF/include/mobileHeaderTemplate.xhtml"></ui:include>
+	</h:panelGroup> -->
+	<h:panelGroup id="header">
+	<h:form styleClass="form-vertical">
+		<div
+			style="background-color: #006DB4; border-bottom: 1px solid #004F8A; height: 60px; padding: 10px 0px 57px; position: fixed; top: 0; z-index: 9999; width: 100%;">
+			<div class="container-fluid">
+				<div class="row">
+					<!-- <div class="col-xs-1" style="margin-top: 12px;padding-left: 5px;"><h:commandLink value="" action="search.xhtml?faces-redirect=true" style="width:0px;"><h:graphicImage value="resources/app/images/back.svg"></h:graphicImage></h:commandLink></div> -->
+					<!-- <div class="col-xs-7">
+						<h:graphicImage value="resources/app/images/logo-hp-white.png"
+							style="width:150px;" />
+					</div> -->
+					<div class="col-xs-7" style="padding: 0px;margin: 5px 1px 4px 36px;"><h:commandLink value="" action="#{homeBean.mobileHome}" style="width:0px;"><span style="color: #fff;font-size: 20px;font-weight: 600;margin-left: -11px;">CLEVERCHECK</span></h:commandLink></div>
+					<div class="col-xs-1" style="padding: 0px;    margin: 27px 0 0 -260px;"><h:commandLink value="" immediate="true" action="#{homeBean.mobileHome}" style="width:0px;"><h:graphicImage value="Resources/app/images/Allgebra_Logo.png" style="width:75px;height:25px;margin: 4px 0 0 40px;"/></h:commandLink></div>
+					<div class="col-xs-1" style="margin-top: 9px;padding-left: 0px;margin-left: 6px;"><a href="#{request.contextPath}/search.xhtml"><h:graphicImage value="resources/app/images/search.svg"></h:graphicImage></a></div>
+	    			<c:choose>
+					<c:when test="#{homeBean.cartItems!=0}">
+	    			<div class="col-xs-1" style="margin-top: -7px;padding-left: 5px;"><h:commandLink value="" action="#{homeBean.getCartDetails}" style="width:0px;"><span class="badge" style="margin-left: 10px;padding: 1px 3px;background-color: #d32f2f;border-radius: 50%;">#{homeBean.cartItems}</span><h:graphicImage value="resources/app/images/cart.svg"></h:graphicImage></h:commandLink> </div>
+	    			</c:when>                                                
+	    			<c:otherwise>
+	    			<div class="col-xs-1" style="margin-top: -7px;padding-left: 5px;padding-top: 13px;"><h:commandLink value="" action="cartDetails.xhtml?faces-redirect=true" style="width:0px;"><span class="badge" style="margin-left: 10px;padding: 1px 3px;background-color: #d32f2f;border-radius: 50%;"></span><h:graphicImage style="" value="resources/app/images/cart.svg"></h:graphicImage></h:commandLink> </div>
+	    			</c:otherwise>
+	    			</c:choose>
+	    			<div class="col-xs-1" style="margin-top: 8px;"><h:commandLink value="" action="#{userInfoBean.mobileControlPage}" style="width:0px;"><h:graphicImage value="resources/app/images/user.svg"></h:graphicImage></h:commandLink> </div>
+				</div>
+			</div>
+		</div>
+	</h:form>
+</h:panelGroup>
+	<h:form style="margin-top:68px;">
+		<p:growl id="growl1" showDetail="true" life="10000" autoUpdate="true" />
+		<ui:repeat var="cartItems" value="#{viewCartBean.cartItems}">
+			<p:commandLink actionListener="#{homeBean.attrListener}"
+				action="viewDetails.xhtml?faces-redirect=true">
+				<f:attribute name="skuId" value="#{cartItems.skuDetailsInfo.skuId}" />
+
+				<div class="row" style="margin-right: 0px; margin-left: 0px;">
+					<div class="col-xs-9">
+						<ul class="list-unstyled"
+							style="font-size: 16px; font-weight: bold; line-height: 22px; color: #565656; word-wrap: break-word;">
+
+							<li><p:outputLabel styleClass="text-blue"
+									style="margin-bottom: 0px;"
+									value="#{cartItems.skuDetailsInfo.skuId} " /></li>
+							<li><p:outputLabel styleClass="text-blue"
+									value="#{cartItems.skuDetailsInfo.description} " /></li>
+						</ul>
+					</div>
+
+
+
+					<div class="col-xs-3"
+						style="padding-left: 0px; padding-right: 0px;">
+						<ul class="list-unstyled "
+							style="font-size: 14px; font-weight: bold; line-height: 22px; color: #565656">
+
+							<li><p:graphicImage value="resources/app/images/lap-bg.png"
+									rendered="#{cartItems.skuDetailsInfo.imageType == 'NB' }"
+									style="height: 40px;" /></li>
+							<li><p:graphicImage value="resources/app/images/sys.png"
+									rendered="#{cartItems.skuDetailsInfo.imageType == 'PC' }"
+									style="height: 40px;" /></li>
+							<li><p:graphicImage value="resources/app/images/lcd.png"
+									rendered="#{cartItems.skuDetailsInfo.imageType == 'WS' }"
+									style="height: 40px;" /></li>
+							<li><p:outputLabel value="QTY: #{cartItems.quantity}" style="color: #000;"/></li>
+						</ul>
+					</div>
+				</div>
+			</p:commandLink>
+			<div class="row" style="margin-right: 4px; margin-left: 4px;">
+				<div class="col-xs-6" style="padding-left: 0px; padding-right: 0px;">
+					<ul class="list-unstyled" style="text-align: left">
+						<li><p:outputLabel value="USER" styleClass="toplable" style="font-size: 11px;"/></li>
+						<li><p:outputLabel value="#{cartItems.username}"
+								styleClass="bottomlable" style="font-size: 12px;"/></li>
+					</ul>
+				</div>
+
+				<div class="col-xs-6" style="padding-left: 0px; padding-right: 0px;">
+					<ul class="list-unstyled " style="text-align: right;">
+						<li><p:outputLabel value="ADD TIME" styleClass="toplable" style="font-size: 11px;"/></li>
+						<li><p:outputLabel value="#{cartItems.brazilTime}"
+								styleClass="bottomlable" style="font-size: 12px;" /></li>
+					</ul>
+				</div>
+			</div>
+			<p:commandButton value="REMOVE" styleClass="remove" update="@form header" style="color: #000;    background: #fff;border: 1px #f0f0f0 solid; height: 45px;font-size: 14px;"
+				actionListener="#{viewCartBean.removeFromCart(cartItems)}">
+			</p:commandButton>
+		</ui:repeat>
+
+		<div class="row" style="margin-right: 0px; margin-left: 0px;margin-bottom: 60px;">
+			<div class="col-xs-1"></div>
+			<div class="col-xs-5" style="text-align:center;">
+				<ul class="list-unstyled">
+					<li><p:outputLabel value="TOTAL ITEMS " style="color:#7d7b7b" /></li>
+					<li><p:outputLabel value="#{viewCartBean.totalItems}" style="font-size: 18px;"/></li>
+				</ul>
+			</div>
+			<div class="col-xs-5" style="text-align:center;">
+				<ul class="list-unstyled ">
+					<li><p:outputLabel value="TOTAL QUANTITY"
+							style="color:#7d7b7b" /></li>
+					<li><p:outputLabel value="#{viewCartBean.totalQuantity}"  style="font-size: 18px;"/></li>
+				</ul>
+			</div>
+			<div class="col-xs-1"></div>
+		</div>
+		<p:commandButton value="EMPTY CART" update="@form header"
+			styleClass="addtocart" action="#{viewCartBean.emptyCart}" style="font-size: 20px;text-shadow:none;"/>
+		<script type="text/javascript"
+			src="resources/assets/bootstrap/js/bootstrap.min.js"></script>
+
+
+	</h:form>
+
+
+
+
+</h:body>
+</html>

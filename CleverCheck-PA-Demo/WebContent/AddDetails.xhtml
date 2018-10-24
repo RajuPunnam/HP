@@ -1,0 +1,204 @@
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:c="http://java.sun.com/jsp/jstl/core"
+        xmlns:p="http://primefaces.org/ui" >
+<h:head>
+
+
+<title>hp CLEVER CHECK</title>
+<!-- theme fonts -->
+<link
+	href="//db.onlinewebfonts.com/c/4b985369d1883e0219184ffb89bac7b6?family=Night+Train+382"
+	rel="stylesheet" type="text" />
+<link href="Resources/assets/bootstrap/css/bootstrap.min.css"
+	rel="stylesheet" />
+<link href="Resources/assets/font-awesome/css/font-awesome.min.css"
+	rel="stylesheet" />
+<link href="Resources/app/css/app.css" rel="stylesheet" />
+<link href="Resources/app/css/yamm.css" rel="stylesheet"/>
+
+</h:head>
+
+<h:body>
+  
+		<h:panelGroup id="header">		
+		  <ui:include src="/WEB-INF/include/headerTemplate.xhtml" />
+		</h:panelGroup>
+
+		<script type="text/javascript"
+		src="Resources/assets/bootstrap/js/bootstrap.min.js"></script>
+  <h:form style="padding-top:115px;" id="addDetails">
+  <script type="text/javascript">  
+    function start() {  
+        statusDialog.show();  
+    }  
+
+    function stop() {  
+        statusDialog.hide();  
+    }  
+</script>  
+   <p:growl id="growl" showDetail="true" life="10000" /> 
+   
+  	<div style="background-color: #F7F5EE;">
+  		<div class="container">
+  			<div style="background-color: #fff;padding-left: 20px;">
+  				<ol class="breadcrumb" style="margin-top: 40px;">
+				  <li><a><h:commandLink action="#{homeBean.home}" value="HOME" /></a> </li>
+						<ui:repeat var="fb" value="#{homeBean.bufamily}">
+						<li >
+						<i class="fa fa-angle-right" style="font-size: 15px;margin-left: 10px;margin-right: 10px;"></i><a>
+						<h:commandLink actionListener="#{homeBean.breadCrumb}" action="newhome.xhtml?faces-redirect=true" value="#{fb}">
+						<f:attribute name="bufamily" value="#{fb}" />
+						</h:commandLink>
+						</a> </li>
+						</ui:repeat>
+						<li class="active"><i class="fa fa-angle-right" style="font-size: 15px;margin-left: 10px;margin-right: 10px;"></i>#{addDetailsBean.selectedSkuDetails.skuId}</li>
+				</ol>
+				
+				<div class="row">
+					<div class="col-xs-4"></div>
+					<div class="col-xs-8">
+						<h3 class="border-bottom" style="font-size: 22px;color:#006CB4;font-weight: 600;margin-top: -10px;padding-bottom: 8px;padding-left: 5px;">#{addDetailsBean.selectedSkuDetails.skuId} : #{addDetailsBean.selectedSkuDetails.description} </h3>
+					</div>
+				
+				
+				
+				</div>
+				
+				<div class="row">
+					<div class="col-xs-4">
+					
+					<div class="row" style="margin-top: 20px;margin-left: 20px;">
+						<p:graphicImage value="Resources/app/images/lap-bg.png" style="margin: -22px 0px -16px -36px;" rendered="#{addDetailsBean.selectedSkuDetails.imageType == 'NB' }" />								
+									
+						<p:graphicImage value="Resources/app/images/sys.png"   rendered="#{addDetailsBean.selectedSkuDetails.imageType == 'PC' }" style="margin-left: -20px;" height="200" />
+										
+						<p:graphicImage value="Resources/app/images/lcd.png"  rendered="#{addDetailsBean.selectedSkuDetails.imageType == 'WS' }"  height="200" />					
+					</div>	
+						
+						<div class="row" style="margin-top: 15px;text-align: center;">
+							<!-- <div class="col-xs-1"></div> -->
+							<!-- <div class="col-xs-10"> -->
+								<div class="row">
+									<p:inputText id="quantity" placeholder="           INPUT QTY          " styleClass="ui-inputqty" value="#{addDetailsBean.quantity}"/>
+								</div>
+								<div class="row">
+									<p:commandButton value="ADD TO CART" actionListener="#{addDetailsBean.addToCart}" update="growl @form header"  styleClass="btn-buy-now btn-big  current"  />
+								</div>
+								<div class="row">
+									<p:commandButton value="Download" styleClass="styleGreen" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop)"
+									action="#{addDetailsBean.download}" style="margin-top: 15px;">
+								</p:commandButton>
+								</div>
+							<!-- </div> -->
+							<!-- <div class="col-xs-1"></div> -->
+							
+						
+						</div>
+					</div>
+					<div class="col-xs-8">
+						
+						<div class="row">
+							<div class="col-xs-6">
+								<label style="font-size: 15px;">CONFIGURATION</label>
+								<ul class="list-unstyled" style="line-height: 22px;font-size: 11px;">
+									  <ui:repeat var="configurations" value="#{addDetailsBean.selectedSkuDetails.configuration}"  varStatus="status">
+									<li>#{configurations}</li>
+									</ui:repeat>									
+								</ul>
+							</div>
+							<div class="col-xs-6">
+								<label style="font-size: 15px;"><p:outputLabel value="SHORTAGE" rendered="#{addDetailsBean.selectedSkuDetails.skuAvailability == '0'}"/></label>
+								<ul class="list-unstyled" style="line-height: 22px;font-size: 11px;">
+									  <ui:repeat var="shortages" value="#{addDetailsBean.selectedSkuDetails.shortage}"  varStatus="status">
+									<li>#{shortages}</li>
+									</ui:repeat>
+								</ul>
+							</div>
+						</div>
+						
+						<!-- <div class="border-bottom border-width"></div> -->
+						
+					</div>
+				</div>
+				
+				<div class="border-bottom border-width"></div>
+				
+				<div class="row">
+					<div class="col-xs-12" style="margin-top: 15px">
+						<ul class="list-unstyled">
+							<li class="inline" style="width: 150px;">
+							</li>
+							<li class="inline" style="width: 150px;">
+								<div align="right" style="position: absolute;top: 40px;">
+									<h1 style="margin-bottom: 0px;">#{addDetailsBean.selectedSkuDetails.skuAvailability}</h1>
+									<label class="text-muted" style="font-size: 15px;">Clear to Build</label>
+								</div>
+							</li>
+							<li class="inline" style="width: 180px;">
+								<div align="right" style="position: absolute;top: 40px;">
+									<h1 style="margin-bottom: 0px;">#{addDetailsBean.selectedSkuDetails.pipeLineQuantity}</h1>
+									<label class="text-muted" style="font-size: 15px;">#{addDetailsBean.selectedSkuDetails.pipeLineWeeks}  weeks pipeline</label>
+								</div>
+							</li>
+							<li class="inline" style="width: 150px;">
+								<div align="right" style="position: absolute;top: 40px;">
+									<h1 style="margin-bottom: 0px;">#{addDetailsBean.selectedSkuDetails.newOrderDeliveryWeeks} <span style="font-size: 17px;font-weight: bold;">Weeks</span></h1>
+									<label class="text-muted" style="font-size: 15px;">New Delivery</label>
+								</div>
+							</li>
+							<li class="inline" style="width: 280px;padding-right: 10px;">
+								<div>
+									<h3 style="font-size: 15px;font-weight: 700;margin-top: 0px;padding-left: 5px;">PIPELINE DETAILS</h3>
+									<div style="border: 1px solid #6fba54;padding-bottom: 5px;">
+										<div class="border-bottom" style="margin-top: 3px;padding-bottom: 20px;margin-left: 5px;margin-right: 5px;">
+											<label class="pull-left" style="padding-left: 5px;font-size: 11px;">Ready to ship Date</label>
+											<label class="pull-right" style="padding-right: 5px;font-size: 11px;">Ready to ship Units</label>
+										</div>
+										<div class="row" style="padding-left: 10px;padding-right: 10px;">
+											<div class="col-xs-6">
+												<ul class="list-unstyled" style="font-size: 11px;font-weight: bold;line-height: 22px;color: #565656">
+													<ui:repeat var="date" value="#{addDetailsBean.dates}">
+														<li>#{date}</li>
+													</ui:repeat>	
+												</ul>
+												<hr/>
+												<div style="font-size: 11px;font-weight: bold;margin-right: -10px;color: #565656">Total</div>
+											</div>
+											<div class="col-xs-6">
+												<ul class="list-unstyled text-center" style="font-size: 11px;font-weight: bold;line-height: 22px;color: #565656">
+													<li>#{addDetailsBean.selectedSkuDetails.pavail15Days}</li>
+													<li>#{addDetailsBean.selectedSkuDetails.pavail30Days}</li>
+													<li>#{addDetailsBean.selectedSkuDetails.pavail45Days}</li>
+													<li>#{addDetailsBean.selectedSkuDetails.pavail60Days}</li>
+													<li>#{addDetailsBean.selectedSkuDetails.pavail75Days}</li>
+													<li>#{addDetailsBean.selectedSkuDetails.pavail90Days}</li>
+												</ul>
+												<hr/>
+												<div align="center" style="font-size: 11px;font-weight: bold;color: #565656">#{addDetailsBean.selectedSkuDetails.pipeLineQuantity}</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+  			</div>
+	  	</div>
+  	</div>
+  	
+ 
+ <p:dialog widgetVar="statusDialog"  style="background:none;box-shadow:none !important;border:medium none !important;" modal="true" draggable="false" closable="false" resizable="false" showHeader="false" >
+		  					  <p:graphicImage value="Resources/images/loader.gif" width="100" height="100" />
+				 		  </p:dialog>
+  	</h:form>
+
+</h:body>
+</html>
+
+
+

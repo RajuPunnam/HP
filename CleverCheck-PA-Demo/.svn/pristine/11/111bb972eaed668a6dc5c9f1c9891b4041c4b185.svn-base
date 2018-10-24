@@ -1,0 +1,423 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<meta charset="utf-8" />
+
+
+	<title>hp CLEVER CHECK</title>
+	<!-- theme fonts -->
+	<link
+		href="//db.onlinewebfonts.com/c/4b985369d1883e0219184ffb89bac7b6?family=Night+Train+382"
+		rel="stylesheet" type="text" />
+	<link href="Resources/assets/bootstrap/css/bootstrap.min.css"
+		rel="stylesheet" />
+	<link href="Resources/assets/font-awesome/css/font-awesome.min.css"
+		rel="stylesheet" />
+	<link href="Resources/app/css/app.css" rel="stylesheet" />
+	<link href="Resources/app/css/yamm.css" rel="stylesheet" />
+	<link href="Resources/app/css/yamm.css" rel="stylesheet" />
+
+	<script type="text/javascript"
+		src="Resources/assets/bootstrap/js/bootstrap.min.js"></script>
+
+	<script type="text/javascript" src="Resources/js/primefaceshover.js"></script>
+	<script type="text/javascript" src="Resources/js/shortlist.js"></script>
+</h:head>
+
+<style>
+
+
+#home .ui-corner-all {
+	-moz-border-radius: 0px;
+	-webkit-border-radius: 0px;
+	border-radius: 0px;
+}
+
+.ui-shortlist {
+	width: 24px;
+	height: 25px;
+	margin-top: -14px !important;
+	margin-left: -5px;
+	background-image: url("Resources/app/images/starticon.png") !important;
+}
+
+.ui-shortlisted {
+	width: 26px;
+	height: 25px;
+	margin-top: -13px !important;
+	margin-left: -5px;
+	background-image: url("Resources/app/images/orangeicon.png") !important;
+}
+
+.ui-btn {
+	height: 27px;
+	margin: -4px -5px 0px -5px;
+	background: white;
+	border: none;
+}
+
+	
+#feedback a{
+background-color: white;
+border: white;
+}
+.removeAll{
+	background: #d95250;
+	width: 100%;
+	height: 30px;
+	color: #fff;
+	text-shadow: none;
+	border: none;
+	box-shadow: none;
+}
+
+#cross{
+	display: none;
+	
+}
+
+#feedback .shortHover:hover #cross {
+	display: inline-block;
+	position: absolute;
+} 
+
+.shortHover:hover{
+	background: #000;
+	position: relative;
+}
+.all{
+	background: #eee;
+	width: 100%;
+	font-size: 13px;
+	padding: 6px 0px 6px 8px;
+}
+</style>
+
+
+<h:body>
+	<ui:insert name="header">
+		<ui:include src="/WEB-INF/include/headerTemplate.xhtml" />
+	</ui:insert>
+
+	<h:form style="padding-top:120px;" id="home">
+		<div class="clearfix">
+
+			<div class="container">
+				<div class="row">
+					<div class="col-xs-3">
+						<div style="margin-top: 50px;">
+							<div
+								style="border-top: 1px solid #efefef; border-bottom: 1px solid #efefef; padding: 10px;">
+								<h5
+									style="margin-top: 0px; margin-bottom: 0px; font-weight: 700; color: #333">TOP
+									5 SELLING SKUs</h5>
+							</div>
+							<div style="margin-top: 25px;">
+								<ui:repeat var="s" value="#{homeBean.topFiveSellingSkus}">
+									<ul class="list-unstyled"
+										style="padding-left: 10px; line-height: 25px; margin: 0px 0px 37px -10px;">
+										<li style="padding-left: 10px; margin-top: -20px;"><span
+											style="padding-right: 10px;"></span> <h:commandLink
+												actionListener="#{homeBean.attrListener}"
+												action="AddDetails.xhtml?faces-redirect=true"
+												value="#{s.skuid} (#{s.count})">
+												<f:attribute name="skuId" value="#{s.skuid}" />
+											</h:commandLink></li>
+									</ul>
+								</ui:repeat>
+							</div>
+						</div>
+						<div style="margin-top: 25px;">
+							<div
+								style="border-top: 1px solid #efefef; border-bottom: 1px solid #efefef; padding: 10px;">
+								<h5
+									style="margin-top: 0px; margin-bottom: 0px; font-weight: 700; color: #333">TOP
+									5 AVAILABILITY SKUs</h5>
+							</div>
+							<div style="margin-top: 25px;">
+								<ui:repeat var="s" value="#{homeBean.topFiveAvailableSkus}">
+									<ul class="list-unstyled"
+										style="padding-left: 10px; line-height: 25px; margin: 0px 0px 37px -10px;">
+										<li style="padding-left: 10px; margin-top: -20px;"><span
+											style="padding-right: 10px;"></span> <h:commandLink
+												actionListener="#{homeBean.attrListener}"
+												action="AddDetails.xhtml?faces-redirect=true"
+												value="#{s.skuid} (#{s.count})">
+												<f:attribute name="skuId" value="#{s.skuid}" />
+											</h:commandLink></li>
+									</ul>
+								</ui:repeat>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-9">
+						<ol class="breadcrumb">
+							<li><a><h:commandLink action="#{homeBean.home}"
+										value="HOME" /></a></li>
+							<ui:repeat var="fb" value="#{homeBean.bufamily}">
+								<li><i class="fa fa-angle-right"
+									style="font-size: 15px; margin-left: 10px; margin-right: 10px;"></i><a>
+										<h:commandLink actionListener="#{homeBean.breadCrumb}"
+											value="#{fb}">
+											<f:attribute name="bufamily" value="#{fb}" />
+										</h:commandLink>
+								</a></li>
+							</ui:repeat>
+						</ol>
+						<div id="products" class="row">
+
+							<!-- Need to give sku list -->
+							<!-- 	<ui:repeat var="s" value="#{homeBean.familySkus}"  varStatus="status"> -->
+
+
+							<p:outputLabel value="NO Records Found"
+								rendered="#{homeBean.norecords == 'true'}" />
+							<ui:repeat var="s" value="#{homeBean.skusDetailsInfo}"
+								varStatus="status">
+								<div class="col-xs-4 item">
+									<div class="product-item">
+										<div class="row" style="margin-bottom: 10px;">
+
+
+											<div class="col-xs-6">
+												<h:graphicImage url="Resources\app\images\tag.png"
+													style="height: 25px; width: 50px;"
+													rendered="#{s.simIndex != null}" />
+												<span class=" tag"
+													style="color: smokewwhite; margin-left: -46px;">#{s.simIndex}</span>
+											</div>
+
+											<div class="col-xs-6">
+												<span class="hover-badge"> <p:commandButton
+														icon="ui-shortlist" update="@form" process="@form"
+														styleClass="ui-btn shortListed" value="Shortlist"
+														actionListener="#{homeBean.shortListed}"
+														rendered="#{s.isShortListed != 'selected'}" >
+														<f:attribute name="skuId" value="#{s.skuId}" />
+													</p:commandButton> <p:commandButton icon="ui-shortlisted" value="shortlisted"
+														update="@form" process="@form"
+														image="Resources\app\images\shortlisted.png"
+														styleClass="selected-gimage shortListed"
+														actionListener="#{homeBean.shortListed}"
+														rendered="#{s.isShortListed == 'selected'}">
+														<f:attribute name="skuId" value="#{s.skuId}" />
+													</p:commandButton>
+
+												</span>
+
+												<h:graphicImage id="starimg"
+													url="Resources\app\images\orangestar.png"
+													styleClass="orange-star-image"
+													rendered="#{s.isShortListed == 'selected'}" />
+
+
+											</div>
+										</div>
+
+										<h:commandLink actionListener="#{homeBean.attrListener}"
+											action="AddDetails.xhtml?faces-redirect=true">
+											<f:attribute name="skuId" value="#{s.skuId}" />
+											<f:attribute name="count" value="#{s.count}" />
+
+											<div class="row">
+												<div class="col-xs-4">
+													<span class="product-title">SKU</span>
+												</div>
+
+												<div align="left" class="col-xs-8 forprodID">
+
+													<p:outputLabel styleClass="product-id prodID"
+														value="#{s.skuId}"
+														rendered="#{homeBean.search == 'false' or  s.count == 0}" />
+
+													<p:outputLabel styleClass="product-id prodID"
+														value="Alternative #{s.count}"
+														rendered="#{homeBean.search == 'true' and s.count > 0}" />
+
+												</div>
+												<div>
+													<i class="fa fa-start" style="color: red"></i>
+												</div>
+											</div>
+											<hr />
+											<div class="row">
+												<div class="col-xs-6">
+													<p:graphicImage value="Resources/app/images/laptop.png"
+														rendered="#{s.imageType == 'NB' }" height="80" />
+
+													<p:graphicImage value="Resources/app/images/sys.png"
+														rendered="#{s.imageType == 'PC' }" height="85" />
+
+													<p:graphicImage value="Resources/app/images/lcd.png"
+														rendered="#{s.imageType == 'WS' }" height="85" />
+
+												</div>
+												<div class="col-xs-6">
+													<div align="right">
+														<h3>#{s.skuAvailability}</h3>
+														<strong style="font-size: 11px;">Clear to build</strong>
+													</div>
+												</div>
+												<div class="col-xs-6">
+													<div align="right" style="margin-top: 6px;">
+														<h3>#{s.pipeLineQuantity}</h3>
+														<strong style="font-size: 11px;">
+															#{s.pipeLineWeeks} W Pipeline</strong>
+													</div>
+												</div>
+											</div>
+
+											<div class="row" style="margin-top: 5px;">
+
+												<!-- <div class="col-xs-6">
+										<div align="right">
+											<h3>#{s.newOrderDeliveryWeeks} W</h3>
+											<strong style="font-size: 11px;">New Delivery</strong>
+										</div>
+									</div> -->
+											</div>
+											<hr />
+											<div class="row">
+												<div class="col-xs-12 list">
+													<ul>
+														<ui:repeat var="conf" value="#{s.configuration}">
+															<li>#{conf}</li>
+														</ui:repeat>
+													</ul>
+													<small><p:outputLabel value="Shortage"
+															rendered="#{s.skuAvailability == '0'}" /></small>
+													<ul>
+														<ui:repeat var="conf" value="#{s.shortage}">
+															<li>#{conf}</li>
+														</ui:repeat>
+
+														<!-- <li>ASSEMBLY,BOARD,MAIN</li>
+											<li>GNRC 4BG PC3L-12800 ...</li>
+											<li>SSA LCD 14 LED HD SVA AG f...</li> -->
+													</ul>
+												</div>
+											</div>
+										</h:commandLink>
+
+
+									</div>
+								</div>
+
+							</ui:repeat>
+							</div>
+							<div class="shortListNew">
+								<div id="feedback">
+									<p:commandButton  value="Shortlist  #{homeBean.shortlistedcount}" 
+										id="shortList" onclick="openShortList()" style="font-weight: normal;"
+										styleClass="shortList shortlistedmenu">
+										<div class="shortlistPanel" style="box-shadow: 3px 3px 17px -1px #7b7b7b;">
+	
+											<div class="shortRight" >
+												<div class="row">
+													<div class="col-xs-12" id="shortlistedmenu">
+													<div class="all">
+														ShortListed Items
+													</div>
+														<ui:repeat value="#{homeBean.shortListedskusforPanel}"
+															var="shortedSkus">
+														
+														<p:commandLink id="removeButton"  style="background-color:White;color:black;width: 0px; height: 0;margin: 0 0 0 117px;" value="X" actionListener="#{homeBean.removeShortlisted}" update="@form" ajax="true">
+																<div id="cross" class="fa fa-times" style="color: #000;margin-left: 107px;background-color: #ccc;border-radius:50%;width: 16px;color: #fff;padding: 1px 0px 0px 3px; height: 16px;margin-top: 11px;" ></div>>
+																
+																<f:attribute name="skuId" value="#{shortedSkus.skuId}"/>
+																</p:commandLink>
+															
+														
+															<h:commandLink actionListener="#{homeBean.attrListener}" 
+																action="AddDetails.xhtml?faces-redirect=true" styleClass="shortHover"
+																style="height: 0px;box-shadow: none;line-height: 30px;padding-top: 0px;padding-bottom: 0px; ">
+																<f:attribute name="skuId" value="#{shortedSkus.skuId}" />
+																<f:attribute name="count" value="#{shortedSkus.count}" />
+																 
+																<div class="col-xs-12" style="padding-left: 6px">
+																
+																	<p:graphicImage value="Resources/app/images/laptop.png"
+																		rendered="#{shortedSkus.imageType == 'NB' }"
+																		height="50" />
+	
+																	<p:graphicImage value="Resources/app/images/sys.png"
+																		rendered="#{shortedSkus.imageType == 'PC' }"
+																		height="55" />
+	
+																	<p:graphicImage value="Resources/app/images/lcd.png"
+																		rendered="#{shortedSkus.imageType == 'WS' }"
+																		height="55" />
+	
+																</div>
+	
+																<div class="row"
+																	style="padding-left: 30px; padding-top: 50px; color: #A7A8A7">
+																	#{shortedSkus.skuId}</div>
+	
+															</h:commandLink>
+														
+															<div>
+																<img alt=""
+																	src="Resources/app/images/divider-horizon-line.jpg"
+																	style="height: 1px; width: 206px" />
+															</div>
+														</ui:repeat>
+	
+														<p:commandButton styleClass="removeAll" style="margin:16px 0px 1px 0px;"
+															rendered="#{not empty homeBean.shortListedskusforPanel}"
+															update="@form" ajax="true" value="Remove All"
+															action="#{homeBean.removeAllShortListed}"></p:commandButton>
+	
+													</div>
+												</div>
+											</div>
+	
+										</div>
+									</p:commandButton>
+								</div>
+							</div>
+
+
+
+						
+					</div>
+				</div>
+			</div>
+		</div>
+		<script>
+			function scrollWindow() {
+				verticalOffset = typeof (verticalOffset) != 'undefined' ? verticalOffset
+						: 0;
+				element = $('body');
+				offset = element.offset();
+				offsetTop = offset.top;
+				$('html, body').animate({
+					scrollTop : offsetTop
+				}, 500, 'linear');
+			}
+		</script>
+		<div id="top" class="fk-ui-goTop fk-hidden gtt-flytop" style="display: block;"
+			onclick="scrollWindow()">
+			TOP
+			<div class="css-arrow arrow-border"></div>
+			<div class="css-arrow arrow-top"></div>
+		</div>
+
+
+
+
+
+
+
+	</h:form>
+
+</h:body>
+
+</html>
+
+
+

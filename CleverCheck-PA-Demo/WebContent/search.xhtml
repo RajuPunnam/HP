@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<meta charset="utf-8" />
+	<meta name="description" content="" />
+	<meta name="author" content="" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="yes" />
+
+	<title>hp CLEVER CHECK</title>
+	<!-- theme fonts -->
+	<link href="resources/assets/bootstrap/css/bootstrap.min.css"
+		rel="stylesheet" />
+	<link href="resources/assets/font-awesome/css/font-awesome.min.css"
+		rel="stylesheet" />
+	<link href="resources/css/app.css" rel="stylesheet" />
+	<script src="resources/js/checkout.js"></script>
+	<script src="resources/js/jquery.touchSwipe.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+	<script type="text/javascript"
+		src="resources/js/swipeIhub.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		$("body").fadeIn(1000);
+		$("body, .swipeArea, .businessUnitsClick, .searchClick").css("height", $(window).height()+50);	
+		$(".businessUnitsClick .businessContent, .searchClick .searchData").css("height", $(window).height()-100);
+		$(".fa-angle-down").hide();
+		animateUpArrowIcon();
+		
+		$(".ui-accordion-header").click(function(){
+			$(".businessUnitsClick .businessHeader  .heading, .businessUnitsClick .businessContent").empty();
+			//console.log($(this).next().find("li")[0].innerHTML);
+			console.log($(this)[0].nextSibling);
+			
+			$("body").css("overflow","hidden");
+			
+			$(".businessUnitsClick, .businessUnitsClick .businessHeader, .businessUnitsClick .businessContent").fadeIn(200);
+			
+			$(".businessUnitsClick .businessHeader .heading").html($(this).text());
+			
+			//console.log($(this).next().find("a"));
+			
+			$(this).next().find("a").each(function(){
+				console.log($(this)[0].outerHTML);
+				$(".businessUnitsClick .businessContent").append($(this)[0].outerHTML);
+			});
+			
+			
+			$(".businessUnitsClick .businessContent").animate({scrollTop:0}, 'fast');
+			
+			//$(".businessUnitsClick .businessContent").html($(this)[0].nextSibling);
+			//.businessUnitsClick .businessHeader .businessUnitsClick .businessContent
+			
+			$(this).removeClass("ui-state-active");
+			$(this).attr("aria-expanded","false");
+			$(this).attr("aria-selected","false");
+			$(this).next().attr("aria-hidden", "true");
+			$(this).next().hide();
+		});
+		
+		$(".businessUnitsClick .businessHeader").click(function(){
+			$(".businessUnitsClick, .businessUnitsClick .businessHeader, .businessUnitsClick .businessContent").fadeOut(200);
+			$("body").css("overflow-y","scroll");
+		});
+		
+		$(".searchInput").click(function(){
+			$(".searchClick").show();
+			$(".searchClick input").focus().val('');
+			$(".searchClick").animate({
+				top: "0px"
+			}, 300, function(){
+
+			});
+		});
+		
+		$(".searchClick .fa").click(function(){
+			
+			$(".searchClick").animate({
+				top: "250px"
+			}, 100, function(){
+				$(".searchClick").fadeOut(100);
+			});
+		});
+		
+		/* $(".swipeArea").click(function(){
+			openBusinessUnits();
+		}); */
+		
+	});
+	
+	
+	$(function() { 
+		$(".swipeArea").swipe( {
+		  swipeUp:function(event, direction, distance, duration) {
+			  console.log("You swiped " + direction);
+		    openBusinessUnits();
+		  }	
+		});
+		
+		$(".ui-accordion-header").swipe({
+			swipeDown:function(event, direction, distance, duration) {
+				  console.log("You swiped " + direction);
+				  closeBusinessUnits();
+			  }
+		});
+	});
+	function openBusinessUnits() {
+		console.log("Business Units");
+		$(".searchShrink").animate({
+			width: "70%"
+		}, 500, function(){
+
+		});
+		$(".mainHeaderData").css("background","none");
+		$(".mainHeaderData").css("background-color","none");
+		$(".mainHeaderData").css("border-bottom","none");
+		$(".swipeArea").hide();
+		$(".fa-angle-down").show();
+		//$(".businessUnitsData .ui-accordion-header").css("height","auto");
+		$(".businessUnitsData .ui-accordion-header").css("overflow","none");
+		$("body").css("overflow-y","hidden");
+		var height = $(window).height()-74-20;
+		height = height/5;
+		$(".ui-accordion-header").css("line-height",height-16+"px");
+		$(".businessUnitsData .ui-accordion-header").animate({
+		    height: height+"px"
+		  }, 100, function() {
+		    // Animation complete.
+		  });
+		$(".content-body").hide();
+		 $(".businessUnitsData").animate({
+		    top: "74px"
+		  }, 200, function() {
+		    // Animation complete.
+		  });
+	}
+
+	
+	//background-color: #2b72b8;border-bottom: 1px solid #004F8A
+	
+	function animateUpArrowIcon() {
+		$(".upArrowIcon").animate({
+		    	top: "-19px"
+		  }, 400, function() {
+			  $(".upArrowIcon").animate({
+			    	top: "-22px"
+			  }, 400, function() {
+				  $(".upArrowIcon").animate({
+				    	top: "-15px"
+				  }, 800, function() {
+					  animateUpArrowIcon();
+				  });
+			  });
+		  });		
+	}
+	
+	function closeBusinessUnits() {
+		//console.log("Business Units");
+		$("body").css("overflow-y","hidden");
+		$(".searchShrink").animate({
+			width: "100%"
+		}, 500, function(){
+			// Call back
+		});
+		$(".mainHeaderData").css("background-color","#006bb3");
+		$(".mainHeaderData").css("border-bottom","1px solid #004F8A");
+		$(".swipeArea").show();
+		$(".content-body").fadeIn(1000);
+		$(".businessUnitsData .ui-accordion-header").css("overflow","hidden");
+		$(".businessUnitsData").animate({
+		    bottom: "-30px"
+		  }, 100, function() {
+			  $(".fa-angle-down").hide();
+		  });
+		$(".businessUnitsData").css("top","inherit");
+		$(".businessUnitsData .ui-accordion-header").animate({
+		    height: "0.3px"
+		  }, 100, function() {
+		    // Animation complete.
+		  });
+	}
+	
+	function loadcartDetails(page) {
+		//alert(page);
+		window.location.href = page;
+		setTimeout(function(){
+			location.reload();
+		}, 300);
+	}
+	
+	
+	
+	 $(function(){
+		var ink, d, x, y;
+		$(".ripplelink").click(function(e){
+	    if($(this).find(".ink").length === 0){
+	        $(this).prepend('<span class='ink'></span>');
+	    }
+	         
+	    ink = $(this).find(".ink");
+	    ink.removeClass("animate");
+	     
+	    if(!ink.height()){
+	    	if(!ink.width()) {
+		        d = Math.max($(this).outerWidth(), $(this).outerHeight());
+		        ink.css({height: d, width: d});
+	    	}
+	    }
+	     
+	    x = e.pageX - $(this).offset().left - ink.width()/2;
+	    y = e.pageY - $(this).offset().top - ink.height()/2;
+	     
+	    ink.css({top: y+'px', left: x+'px'}).addClass("animate");
+	});
+	});
+	
+</script>
+<style>
+html {
+	width: 100%;
+}
+
+body {
+	display: none;
+	overflow: hidden;
+/* Old Browsers */background: -moz-radial-gradient(center, ellipse cover, rgba(78,99,153,1) 0%, rgba(52,58,76,1) 100%);
+ /* FF3.6+ */background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, rgba(78,99,153,1)), color-stop(100%, rgba(52,58,76,1)));
+/* Chrome, Safari4+ */background: -webkit-radial-gradient(center, ellipse cover, rgba(78,99,153,1) 0%, rgba(52,58,76,1) 100%);
+ /* Chrome10+,Safari5.1+ */background: -o-radial-gradient(center, ellipse cover, rgba(78,99,153,1) 0%, rgba(52,58,76,1) 100%);
+ /* Opera 11.10+ */background: -ms-radial-gradient(center, ellipse cover, rgba(78,99,153,1) 0%, rgba(52,58,76,1) 100%);
+ /* IE 10+ */background: radial-gradient(ellipse at center, rgba(78,99,153,1) 0%, rgba(52,58,76,1) 100%);
+/* W3C */filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#4e6399', endColorstr='#343a4c', GradientType=1 );
+/* IE6-9 fallback on horizontal gradient */
+	/* background: rgba(78,99,153,1); */
+	background: rgb(0, 108, 180);
+	position: fixed;
+	width: 100%;
+	overflow-x: hidden;	
+}
+
+.upArrowIcon {
+    font-size: 23px;
+    position: absolute;
+    top: -15px;
+}
+
+.content-body {
+	z-index: 15;
+}
+
+
+.businessUnitsData {
+    position: absolute;
+    z-index: 9;
+    bottom: -30px;
+}
+
+.ui-icon {
+	display: none !important;
+}
+
+.ui-state-default, .ui-widget-content .ui-state-default,
+	.ui-widget-header .ui-state-default {
+	background: #316796;
+}
+
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover,
+	.ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus
+	{
+	background: #316796;
+}
+
+.ui-accordion-header {
+	/* height: 68px; */
+	font-weight: normal;
+	text-shadow: 0 0 15px rgba(0,0,0,.4);
+	text-decoration: none;
+    color: #eaeaea;
+	font-size: 16px;
+	transition: opacity .35s ease-out;
+	background-color:  rgba(78,99,153,0.2);
+	/* border-top: 1px solid #18568C; */
+	line-height: 55px;
+	text-align: center;
+	text-transform: uppercase;
+	box-shadow: none;
+	padding: 0.5em 2.5em 0.5em 2.2em !important;
+}
+
+
+.nav-side-menu {
+	height: 50%;
+}
+
+.buttn {
+	height: 100%;
+	width: 100%;
+	/* background-color: #316796 !important; */
+	background-color:  rgba(78,99,153,0.2);
+	/* border: 1px solid #316796; */
+	-webkit-box-shadow: none !important;
+	box-shadow: none !important;
+	color: #fff;
+}
+
+.ui-accordion .ui-accordion-content {
+	padding: 1em 3.2em;
+}
+
+.ui-inputfield {
+	margin: -9px 0px 1px 0px;
+	height: 42px;
+	border-color: none !important;
+	border: 1px solid #fff;
+	-webkit-box-shadow: none !important;
+}
+
+.has-feedback .form-control {
+	padding-left: 28px;
+}
+
+.swipeArea {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	height: 261px;
+	z-index: 10;
+	top: 55px;
+}
+
+.searchInput {
+	z-index: 11
+}
+
+.searchInput input {
+	background: #fff;
+	    width: 117%;
+}
+
+
+.searchInputZindex, .bussinessZindex {
+	z-index: 13;
+}
+
+.businessUnitsData .ui-accordion-header {
+	height: 0.3px;
+	overflow: hidden;
+background: -moz-linear-gradient(top,  rgba(92,115,181,0.6) 0%, rgba(125,185,232,0) 100%); /* FF3.6-15 */
+background: -webkit-linear-gradient(top,  rgba(92,115,181,0.6) 0%,rgba(125,185,232,0) 100%); /* Chrome10-25,Safari5.1-6 */
+background: linear-gradient(to bottom,  rgba(92,115,181,0.6) 0%,rgba(125,185,232,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#5c73b5', endColorstr='#007db9e8',GradientType=0 ); /* IE6-9 */
+
+}
+.ui-tabs-outline{
+outline: none;
+}
+
+a:hover, a:active, a:focus {
+	color: #fff;
+	text-decoration: none;
+}
+
+.searchShrink {
+    /* width: 70%; */
+    margin: 0 auto;
+}
+
+.businessUnitsClick, .searchClick {
+	position: fixed;
+	background: #fff;
+	top: 0px;
+	width: 100%;
+	z-index: 14;
+	display: none;
+	overflow: hidden;
+}
+
+.businessUnitsClick .businessHeader {
+	height: 100px;
+	background: rgb(0, 108, 180);
+    overflow: hidden;
+    color: #eaeaea;
+    transition: background-color .2s linear;
+    text-transform: uppercase;
+    text-align: center;
+	line-height: 70px;
+	font-size: 18px;
+	padding: 15px;
+	cursor: pointer;
+}
+
+.businessUnitsClick .businessContent {
+	overflow-y: scroll;
+	width: 100%;
+	padding: 15px;
+}
+
+
+/* :focus {
+    outline: -webkit-focus-ring-color auto 5px;
+} */
+
+.searchInput:focus{
+	outline: none;
+}
+
+.ui-inputfield .ui-state-focus{
+	box-shadow: none;
+}
+
+.businessUnitsClick .businessContent a {
+	width: 100%;
+	clear: both;
+	padding-top: 2px;
+    display: inline-block;
+}
+
+.businessUnitsClick .businessContent a:hover, .businessUnitsClick .businessContent a:active, .businessUnitsClick .businessContent a:focus {
+	color: #000;
+}
+
+
+
+
+
+.ripplelink{
+  display:block;
+  float:left;
+  width:100%;
+  margin:0.2%;
+  height:10em;
+  line-height:10em;
+  text-align:center;
+  color:#fff;
+  text-decoration:none;
+  position:relative;
+  overflow:hidden;
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  -o-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+  z-index:0;
+}
+
+.ripplelink:hover{
+	z-index:1000;
+  box-shadow:rgba(0, 0, 0, 0.3) 0 16px 16px 0;
+  -webkit-box-shadow:rgba(0, 0, 0, 0.3) 0 16px 16px 0;
+  -moz-box-shadow:rgba(0, 0, 0, 0.3) 0 16px 16px 0;
+}
+
+.ink {
+  display: block;
+  position: absolute;
+  background:rgba(255, 255, 255, 0.3);
+  border-radius: 100%;
+  -webkit-transform:scale(0);
+     -moz-transform:scale(0);
+       -o-transform:scale(0);
+          transform:scale(0);
+}
+
+.animate {
+	-webkit-animation:ripple 0.65s linear;
+   -moz-animation:ripple 0.65s linear;
+    -ms-animation:ripple 0.65s linear;
+     -o-animation:ripple 0.65s linear;
+        animation:ripple 0.65s linear;
+}
+
+@-webkit-keyframes ripple {
+    100% {opacity: 0; -webkit-transform: scale(2.5);}
+}
+@-moz-keyframes ripple {
+    100% {opacity: 0; -moz-transform: scale(2.5);}
+}
+@-o-keyframes ripple {
+    100% {opacity: 0; -o-transform: scale(2.5);}
+}
+@keyframes ripple {
+    100% {opacity: 0; transform: scale(2.5);}
+}
+
+
+.searchClick {
+	top: 250px;
+}
+
+.searchMain {
+	height: 60px;
+}
+
+.searchMain input {
+	background: #fff;
+	border: none;
+	outline: none;
+	padding-left: 30px;
+	height: 56px;
+	line-height: 45px;
+	width: 100%;
+} 
+
+.searchClick .fa {
+	position: absolute;
+	color: #ccc;
+	z-index: 999;
+	font-size: 20px;
+	line-height: 60px;
+	padding-left: 15px;
+	cursor: pointer;
+}
+
+</style>
+
+</h:head>
+<h:body>
+<ui:insert>
+			<ui:include src="/WEB-INF/include/mobileHeaderTemplate.xhtml"></ui:include>
+		</ui:insert>
+	<h:form styleClass="form-vertical" style="z-index: 999;">
+		
+		<div class="content-body" style="height: 300px;">
+			<div class="container">
+				<div class="row">
+					<div class="col-xs-12 searchInputZindex"
+						style="padding-left: 25px; padding-right: 25px;">
+						<div
+							style="position: fixed; top: 50%; width: 85%; height: 4em; margin-top: -2em;">
+							<div class="form-group searchInputZindex searchShrink has-feedback">
+								<span
+									class="fa fa-search fa-lg searchInputZindex form-control-feedback text-muted"
+									style="width: 34px;" />
+								<input type="text" class="searchInput form-control input-lg" style="width: 100%;font-size: 16px;" placeholder="What is your wish today" />
+								
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="row content bussinessZindex"  onclick="openBusinessUnits()" data-role="content" style="position: fixed; bottom: 0px; padding-bottom: 50px; width: 100%;">
+					<div class="col-xs-12"
+						style="padding-left: 30px; padding-right: 30px;">
+						<div align="center">
+							<div>
+								<a href="#" class="fa fa-angle-up white upArrowIcon"></a>
+								<h5 class="white">
+									<a href="#"
+										style="color: #fff; text-decoration: none;">BUSINESS UNITS</a>
+								</h5>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</h:form>
+	
+	<h:form>
+		<h:panelGrid columns="1" styleClass="businessUnitsData" style="width:100%; margin-top: -13px;">
+			<p:commandButton styleClass="buttn fa fa-angle-down fa-lg" onclick="closeBusinessUnits()" value="" style="background: none;font-size: 30px;margin-bottom:-3px;height: 35px;line-height: 32px;border:none;">
+			</p:commandButton>
+			<p:accordionPanel activeIndex="null">
+
+				<p:tab styleClass="businessNotebooks" title="BUSINESS NOTEBOOKS" >
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.bnbcount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="BNB" />
+					</h:commandLink>
+					<ui:repeat var="bnb" action="#{homeBean.home}"
+						value="#{homeBean.bnbfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="bnb"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{bnb.skuid}  (#{bnb.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{bnb.skuid}" />
+								<f:param name="bu" value="BNB" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+				<p:tab title="CONSUMER NOTEBOOK">
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.cnbcount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="CNB" />
+					</h:commandLink>
+					<ui:repeat var="cnb" action="#{homeBean.home}"
+						value="#{homeBean.cnbfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="cnb"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{cnb.skuid}  (#{cnb.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{cnb.skuid}" />
+								<f:param name="bu" value="CNB" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+				<p:tab title="BUSINESS PC">
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.bpccount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="BPC" />
+					</h:commandLink>
+					<ui:repeat var="bpc" action="#{homeBean.home}"
+						value="#{homeBean.bpcfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="bpc"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{bpc.skuid}  (#{bpc.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{bpc.skuid}" />
+								<f:param name="bu" value="BPC" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+				<p:tab title="CONSUMER PC">
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.cpccount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="CPC" />
+					</h:commandLink>
+					<ui:repeat var="cpc" action="#{homeBean.home}"
+						value="#{homeBean.cpcfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="cpc"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{cpc.skuid}  (#{cpc.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{cpc.skuid}" />
+								<f:param name="bu" value="CPC" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+				<p:tab title="WORKSTATIONS">
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.wscount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="WST" />
+					</h:commandLink>
+					<ui:repeat var="wst" action="#{homeBean.home}"
+						value="#{homeBean.wstfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="wst"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{wst.skuid}  (#{wst.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{wst.skuid}" />
+								<f:param name="bu" value="WST" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+			</p:accordionPanel>
+		</h:panelGrid>
+	
+	
+	<div class="swipeArea"></div>
+	
+	<div class="businessUnitsClick">
+		<div class="businessHeader ripplelink">
+			<span class="fa fa-times" style="float:left; line-height: 70px;"></span>
+			<span class="heading"></span>
+		</div>
+		<div class="businessContent"></div>
+	</div>
+	
+	<div class="searchClick">
+		<div class="searchHeader" style="width:100%">
+			<span class="fa fa-arrow-left"></span>
+			<span class="HeadingAutoComplete">
+				<p:autoComplete id="autocomplete"
+					styleClass="form-control searchMain input-lg"
+					style="width: 100%;font-size: 12px; border-radius: 0px;"
+					placeholder="What is your wish today?"
+					value="#{homeBean.searchedSku}"
+					completeMethod="#{homeBean.getSkus}" var="str"
+					itemLabel="#{str.toString()}" itemValue="#{str}" scrollHeight="200">
+					<p:ajax event="itemSelect" listener="#{homeBean.mobileSearch}" />
+				</p:autoComplete>
+			</span>
+		</div>
+		<div class="searchData">
+		
+		</div>	
+	</div>
+	
+	</h:form>
+	<script type="text/javascript"
+		src="resources/assets/bootstrap/js/bootstrap.min.js"></script>
+</h:body>
+</html>
+
+
+
+
