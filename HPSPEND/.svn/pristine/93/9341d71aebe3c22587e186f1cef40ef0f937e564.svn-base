@@ -1,0 +1,101 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<mvc:annotation-driven></mvc:annotation-driven>
+	<mvc:default-servlet-handler />
+	<context:component-scan base-package="com.techouts" />
+	<context:annotation-config />
+	<context:property-placeholder
+		properties-ref="myProps" />
+	<!-- loading properties file -->
+	<bean id="myProps"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="location" value="classpath:config.properties" />
+	</bean>
+	<!--sql Database properties -->
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://${db.host}:${db.port}/${sql.schema}" />
+		<property name="username" value="${sql.username}" />
+		<property name="password" value="${sql.password}" />
+	</bean>
+	<!-- SQL SERVER Database properties -->
+	<!-- <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource"> 
+		<property name="driverClassName" value="net.sourceforge.jtds.jdbc.Driver" 
+		/> <property name="url" value="jdbc:jtds:sqlserver://${db.host}:${db.port}/${sqlserver.schema}" 
+		/> <property name="username" value="${sqlserver.username}"/> <property name="password" 
+		value="${sqlserver.password}"/> </bean> -->
+
+	<!-- Hibernate properties -->
+	<bean id="hibernateProperties"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="properties">
+			<props>
+				<!-- auto create/update tables -->
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.SQLServerDialect</prop>
+			</props>
+		</property>
+	</bean>
+
+
+	<!-- Hibernate resource file -->
+	<bean id="hibernate3AnnotatedSessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="hibernateProperties">
+			<ref bean="hibernateProperties" />
+		</property>
+		<property name="annotatedClasses">
+			<list>
+				<value>com.techouts.hp.dto.PcShipmentsToHp</value>
+				<value>com.techouts.hp.dto.PPB</value>
+				<value>com.techouts.hp.dto.DataStatus</value>
+				<value>com.techouts.hp.dto.POLT</value>
+				<value>com.techouts.hp.dto.PrintShipments</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- Thread pool -->
+	<bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<property name="corePoolSize" value="5" />
+		<property name="WaitForTasksToCompleteOnShutdown" value="true" />
+	</bean>
+	<!-- mail authentication details -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com" />
+		<property name="username" value="${sender.addr}" />
+		<property name="password" value="${email.password}" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.host">smtp.gmail.com</prop>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.socketFactory.port">465</prop>
+				<prop key="mail.smtp.socketFactory.class">javax.net.ssl.SSLSocketFactory</prop>
+				<prop key="mail.smtp.port">465</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- mail service -->
+	<bean id="mailService" class="com.techouts.hp.service.MailService">
+		<property name="javaMailSenderImpl" ref="mailSender"></property>
+		<property name="toAddress" value="${recipient.addr}"></property>
+		<property name="fromAddress" value="${sender.addr}"></property>
+		<property name="ccAddress" value="${recipient.cc}"></property>
+		<property name="bccAddress" value="${mail.bcc}"></property>
+	</bean>
+</beans>  

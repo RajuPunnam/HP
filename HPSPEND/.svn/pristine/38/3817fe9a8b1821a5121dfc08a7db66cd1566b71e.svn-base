@@ -1,0 +1,42 @@
+ftp.flectronics.userId=fhpcompu
+ftp.flectronics.password=h5w9hB(P
+ftp.flectronics.server=ftpam.flextronics.com
+ftp.flectronics.port=21
+main.folder=BINOY
+drive.name=D:
+linux.os.name.drive=/tmp
+
+
+##sql server data base properties
+sqlserver.db.host=192.168.1.49
+sqlserver.db.port=51425
+sqlserver.username=sa
+sqlserver.password=root
+sqlserver.schema=test
+##sql database properties
+sql.schema=test
+sql.username=root
+sql.password=techouts
+sql.db.host=localhost
+sql.db.port=3306
+
+sub.folder.polt=PO LT
+sub.folder.pc.consumption=Consumption
+sub.folder.shipments=PC-Shipments-to-HP
+sub.folder.dir.shipments=PCShipmentstoHP
+sub.folder.printshipmentstohp=Print Shipment to HP
+sucess=SUCESS
+
+print.shipmentstohp.staticfiledate=Wed Jul 20 00:15:00 IST 2015
+polt.pc.staticfiledate=Wed Dec 20 00:15:00 IST 2016
+polt.printer.staticfiledate=Wed Jul 20 00:15:00 IST 2016
+consumption.static.pc.date=Wed Dec 20 00:15:00 IST 2016
+shipments.static.date=Wed Dec 25 00:15:00 IST 2016
+
+
+
+sender.addr=no-reply@techouts.com
+email.password=Techouts123
+recipient.addr=hpsupport@techouts.com
+recipient.cc=uday.k@techouts.com
+mail.bcc=raviteja.k@techouts.com

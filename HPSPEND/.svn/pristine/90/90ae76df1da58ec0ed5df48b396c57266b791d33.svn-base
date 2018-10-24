@@ -1,0 +1,494 @@
+package com.techouts.hp.service;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.ConnectException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import com.techouts.hp.dao.CsvExcelDao;
+import com.techouts.hp.pojo.FileSupport;
+import com.techouts.hp.pojo.FtpSupport;
+
+@Service
+public class FtpService {
+	private static final Logger LOGGER = Logger.getLogger(FtpService.class);
+	@Resource(name = "myProps")
+	private Properties prop;
+	@Autowired
+	private PoltService poltService;
+	@Autowired
+	private PrintShipmentsService printShipmentsService;
+	@Autowired
+	private PcShipmentsToHpService pcShipmentsToHpService;
+	@Autowired
+	private PPBService ppbPcService;
+	@Autowired
+	private CsvExcelDao csvExcelDao;
+
+	public void getDownloadPrinterFiles(FtpSupport ftpSupport, int connectionTrails) throws ParseException {
+		List<?> filesUploadedList = null;
+		List<?> uploadedFiles = null;
+		FTPClient ftpClient = new FTPClient();
+		List<String> folderList = new ArrayList<String>();
+		for (int connectionCount = 0; connectionCount <= 5; connectionCount++) {
+			Date filesMaxDate = getFileMaxDate(ftpSupport);
+			if (getFtpConnection(ftpClient, ftpSupport, connectionCount)) {
+				LOGGER.info("Ftp connected.");
+				try {
+					for (FTPFile mainDir : ftpClient.listDirectories()) {
+						if (mainDir.isDirectory() && mainDir.getName().equals(prop.getProperty("main.folder"))) {
+							LOGGER.info(mainDir.getName());
+							for (FTPFile sub : ftpClient.listDirectories("/" + mainDir.getName())) {
+								if (sub.isDirectory() && sub.getName().equals(ftpSupport.getSubFolder())) {
+									if (ftpClient.changeWorkingDirectory(mainDir.getName() + "/" + sub.getName())) 
+									{
+										LOGGER.info(sub.getName());
+										if (ftpSupport.getSubFolder().equals(prop.getProperty("sub.folder.shipments"))) {
+											folderList.add(mainDir.getName());
+											folderList.add(sub.getName());
+											filesUploadedList = csvExcelDao.getDistinctFileNames(
+													ftpSupport.getSubFolder(), "Pc");
+											uploadedFiles = csvExcelDao.getDistinctPcShipmentsFiles();
+											for (FTPFile file : ftpClient.listFiles()) {
+												if (file.isFile()
+														&& file.getName().endsWith(ftpSupport.getFileSuffix())) {
+													if (!uploadedFiles.contains(file.getName())) {
+														if (file.getTimestamp().getTime().after(filesMaxDate)
+																&& file.getSize() > 0
+																&& !filesUploadedList.contains(file.getName())) {
+															for (int fileDownloadingTries = 0; fileDownloadingTries <= 10; fileDownloadingTries++) {
+																FileSupport fileSupport = new FileSupport();
+																fileSupport.setFtpFile(file);
+																fileSupport.setFtpClient(ftpClient);
+																fileSupport.setFileDownloadTrails(fileDownloadingTries);
+																fileSupport.setSubDirectory(sub.getName());
+																fileSupport.setFolderList(folderList);
+																FtpSupport ftppojo = retriveFile(fileSupport,
+																		ftpSupport);
+																if (ftppojo.isDownloadStatus()) {
+																	break;
+																} else {
+																	continue;
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									 else if (ftpSupport.getSubFolder().equalsIgnoreCase(prop.getProperty("sub.folder.polt"))) {
+										folderList.add(mainDir.getName());
+										folderList.add(sub.getName());
+										for (FTPFile file : ftpClient.listFiles()) {
+											if (file.isFile() && !file.getName().endsWith(ftpSupport.getFileSuffix()))
+
+											{
+												if (file.getTimestamp().getTime().after(filesMaxDate)
+														&& file.getSize() > 0) {
+													for (int fileDownloadingTries = 0; fileDownloadingTries <= 10; fileDownloadingTries++) {
+														FileSupport fileSupport = new FileSupport();
+														fileSupport.setFtpFile(file);
+														fileSupport.setFtpClient(ftpClient);
+														fileSupport.setFileDownloadTrails(fileDownloadingTries);
+														fileSupport.setSubDirectory(sub.getName());
+														fileSupport.setFolderList(folderList);
+														FtpSupport ftppojo = retriveFile(fileSupport, ftpSupport);
+														if (ftppojo.isDownloadStatus()) {
+															break;
+														} else {
+															continue;
+														}
+													}
+												}
+											}
+										}
+
+									} else if (ftpSupport.getSubFolder().equals(
+											prop.getProperty("sub.folder.pc.consumption"))) {
+										folderList.add(mainDir.getName());
+										folderList.add(sub.getName());
+										filesUploadedList = csvExcelDao.getDistinctConsumptionFileNames(ftpSupport
+												.getSubFolder());
+										uploadedFiles = csvExcelDao.getDistinctConsumptionFileNamesList();
+										for (FTPFile file : ftpClient.listFiles()) {
+											if (file.isFile() && !uploadedFiles.contains(file.getName()))
+
+											{
+												if (file.getTimestamp().getTime().after(filesMaxDate)
+														&& file.getSize() > 0
+														&& !filesUploadedList.contains(file.getName())) {
+													for (int fileDownloadingTries = 0; fileDownloadingTries <= 10; fileDownloadingTries++) {
+														FileSupport fileSupport = new FileSupport();
+														fileSupport.setFtpFile(file);
+														fileSupport.setFtpClient(ftpClient);
+														fileSupport.setFileDownloadTrails(fileDownloadingTries);
+														fileSupport.setSubDirectory(sub.getName());
+														fileSupport.setFolderList(folderList);
+														FtpSupport ftppojo = retriveFile(fileSupport, ftpSupport);
+														if (ftppojo.isDownloadStatus()) {
+															break;
+														} else {
+															continue;
+														}
+													}
+												}
+											}
+										}
+
+									} else if (ftpSupport.getSubFolder().equals(
+											prop.getProperty("sub.folder.printshipmentstohp"))) {
+										folderList.add(mainDir.getName());
+										folderList.add(sub.getName());
+										for (FTPFile subSubDir : ftpClient.listDirectories()) {
+											if (subSubDir.isDirectory()) {
+												LOGGER.info(subSubDir.getName());
+												ftpClient.changeWorkingDirectory("/" + mainDir.getName() + "/"
+														+ sub.getName() + "/" + subSubDir.getName());
+												if (subSubDir.getName().equalsIgnoreCase("HW")) {
+													folderList.add(subSubDir.getName());
+													for (FTPFile subSubSubDir : ftpClient.listDirectories()) {
+														LOGGER.info(subSubSubDir.getName());
+														if (subSubSubDir.isDirectory()) {
+															if (ftpClient.changeWorkingDirectory("/"
+																	+ mainDir.getName() + "/" + sub.getName() + "/"
+																	+ subSubDir.getName() + "/"
+																	+ subSubSubDir.getName())) {
+																folderList.add(subSubSubDir.getName());
+																List<String> fileList = csvExcelDao
+																		.getDistinctFileNames(
+																				"/Print Shipment to HP/HW/"
+																						+ subSubSubDir.getName(),
+																				"Print");
+																for (FTPFile file : ftpClient.listFiles()) {
+																	if (!fileList.contains(file.getName())) {
+																		if (file.isFile()
+																				&& !file.getName().endsWith(
+																						ftpSupport.getFileSuffix())) {
+
+																			if (file.getTimestamp().getTime()
+																					.after(filesMaxDate)
+																					&& file.getSize() > 0) {
+
+																				for (int fileDownloadingTries = 0; fileDownloadingTries <= 10; fileDownloadingTries++) {
+																					FileSupport fileSupport = new FileSupport();
+																					fileSupport.setFtpFile(file);
+																					fileSupport.setFtpClient(ftpClient);
+																					fileSupport
+																							.setFileDownloadTrails(fileDownloadingTries);
+																					fileSupport
+																							.setSubSubDirectory(subSubDir
+																									.getName());
+																					fileSupport
+																							.setSubSubSubDirectory(subSubSubDir
+																									.getName());
+																					fileSupport
+																							.setFolderList(folderList);
+																					FtpSupport ftppojo = retriveFile(
+																							fileSupport, ftpSupport);
+																					if (ftppojo.isDownloadStatus()) {
+																						break;
+																					} else {
+																						continue;
+																					}
+																				}
+
+																			}
+																		}
+																	}
+																}
+															}
+															folderList.remove(subSubSubDir.getName());
+														}
+
+													}
+													folderList.remove(subSubDir.getName());
+												}
+												if (subSubDir.getName().equalsIgnoreCase("Supplies")) {
+													folderList.add(subSubDir.getName());
+													for (FTPFile subSubSubDir : ftpClient.listDirectories()) {
+														LOGGER.info(subSubSubDir.getName());
+														if (subSubSubDir.isDirectory()
+																&& subSubSubDir.getName().equalsIgnoreCase("2016")) {
+															if (ftpClient.changeWorkingDirectory("/"
+																	+ mainDir.getName() + "/" + sub.getName() + "/"
+																	+ subSubDir.getName() + "/"
+																	+ subSubSubDir.getName())) {
+																folderList.add(subSubSubDir.getName());
+																List<String> suppliesFolderList = csvExcelDao
+																		.getDistinctFileNames(
+																				"/Print Shipment to HP/Supplies",
+																				"Print");
+																LOGGER.info(suppliesFolderList);
+																for (FTPFile subSubSubSubDir : ftpClient
+																		.listDirectories()) {
+																	LOGGER.info(subSubSubSubDir.getName());
+																	if (subSubSubSubDir.isDirectory()) {
+																		if (ftpClient.changeWorkingDirectory("/"
+																				+ mainDir.getName() + "/"
+																				+ sub.getName() + "/"
+																				+ subSubDir.getName() + "/"
+																				+ subSubSubDir.getName() + "/"
+																				+ subSubSubSubDir.getName())) {
+																			folderList.add(subSubSubSubDir.getName());
+																			if (!suppliesFolderList
+																					.contains(subSubSubSubDir.getName())) {
+																				for (FTPFile file : ftpClient
+																						.listFiles()) {
+
+																					if (file.getTimestamp().getTime()
+																							.after(filesMaxDate)
+																							&& file.getSize() > 0) {
+
+																						for (int fileDownloadingTries = 0; fileDownloadingTries <= 10; fileDownloadingTries++) {
+																							FileSupport fileSupport = new FileSupport();
+																							fileSupport
+																									.setFtpFile(file);
+																							fileSupport
+																									.setFtpClient(ftpClient);
+																							fileSupport
+																									.setFileDownloadTrails(fileDownloadingTries);
+																							fileSupport
+																									.setSubSubDirectory(subSubDir
+																											.getName());
+																							fileSupport
+																									.setSubSubSubDirectory(subSubSubDir
+																											.getName());
+																							fileSupport
+																									.setSubSubSubSubDirectory(subSubSubSubDir
+																											.getName());
+																							fileSupport
+																									.setFolderList(folderList);
+																							FtpSupport ftppojo = retriveFile(
+																									fileSupport,
+																									ftpSupport);
+																							if (ftppojo
+																									.isDownloadStatus()) {
+																								break;
+																							} else {
+																								continue;
+																							}
+																						}
+																					}
+
+																				}
+																			}
+																		}
+																		folderList.remove(subSubSubSubDir.getName());
+																	}
+																}
+															}
+															folderList.remove(subSubSubDir.getName());
+														}
+													}
+													folderList.remove(subSubDir.getName());
+												}
+											}
+
+										}
+									}
+									break;
+								}
+							}
+							}
+							} else {
+							continue;
+						}
+					}
+				} catch (ConnectException connectException) {
+					if (connectionTrails <= 5) {
+						connectException.printStackTrace();
+						LOGGER.error(connectException.getMessage());
+						LOGGER.error("ftp connection failed");
+						LOGGER.info("trying to connect ftp  again");
+						connectionTrails++;
+						getDownloadPrinterFiles(ftpSupport, connectionTrails);
+					}
+
+				} catch (Exception exception) {
+					exception.printStackTrace();
+					LOGGER.error(exception.getMessage());
+				} finally {
+					if (ftpClient.isConnected()) {
+						try {
+							ftpClient.logout();
+							ftpClient.disconnect();
+
+						} catch (Exception e1) {
+							LOGGER.error(e1.getMessage());
+						}
+					}
+				}
+				break;
+			} else {
+				LOGGER.error("ftp connection failed");
+				LOGGER.info("trying to connect ftp  again");
+				continue;
+			}
+		}
+	}
+
+	/**
+	 * This method for connecting to ftp
+	 * 
+	 * @param ftpClient
+	 * @param ftpSupport
+	 * @return
+	 * @throws InterruptedException
+	 */
+	public boolean getFtpConnection(FTPClient ftpClient, FtpSupport ftpSupport, int connectionCount) {
+		boolean connectionStatus = false;
+		try {
+			LOGGER.info("Ftp connecting ........");
+			final int port = 21;
+			ftpClient.connect(ftpSupport.getFtpServer(), port);
+			connectionStatus = ftpClient.login(ftpSupport.getFtpUserName(), ftpSupport.getFtpPassword());
+			ftpClient.enterLocalPassiveMode();
+			ftpClient.setBufferSize(1024 * 1024);
+			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+		} catch (IOException exception) {
+			LOGGER.error(exception.getMessage());
+
+		}
+		return connectionStatus;
+	}
+
+	public FtpSupport retriveFile(FileSupport fileSupport, FtpSupport ftpSupport) {
+		File downloadFile = null;
+		String downloadpath = ftpSupport.getDownloadDir();
+		for (String folderName : fileSupport.getFolderList()) {
+			downloadpath = downloadpath.concat(File.separator + folderName);
+		}
+		try {
+			LOGGER.info("Download started");
+			LOGGER.info("********************");
+			downloadFile = new File(downloadpath);
+			if (!downloadFile.exists()) {
+				downloadFile.mkdirs();
+			}
+			LOGGER.info("FILE NAME            :" + fileSupport.getFtpFile().getName());
+			LOGGER.info("FILE DATE            :" + fileSupport.getFtpFile().getTimestamp().getTime());
+
+			boolean downLoadStatus = fileSupport.getFtpClient().retrieveFile(fileSupport.getFtpFile().getName(),
+					new FileOutputStream(new File(downloadpath + File.separator + fileSupport.getFtpFile().getName())));
+			if (downLoadStatus) {
+				ftpSupport.setDownloadStatus(downLoadStatus);
+				LOGGER.info("File downloaded sucessfully");
+				boolean uploadStatus = false;
+				if (ftpSupport.getSubFolder().equals(prop.getProperty("sub.folder.printshipmentstohp"))) {
+					uploadStatus = printShipmentsService.readDataFromFile(downloadFile.getAbsoluteFile(), fileSupport);
+				} else if (ftpSupport.getSubFolder().equals(prop.getProperty("sub.folder.polt"))) {
+					poltService.readDataFromFile(downloadFile.getAbsoluteFile(), fileSupport);
+				} else if (ftpSupport.getSubFolder().equals(prop.getProperty("sub.folder.shipments"))) {
+					uploadStatus = pcShipmentsToHpService.readDataFromFile(downloadFile.getAbsoluteFile(), fileSupport);
+				} else if (ftpSupport.getSubFolder().equals(prop.getProperty("sub.folder.pc.consumption"))) {
+					if (!fileSupport.getFtpFile().getName().contains("Printer")) {
+						uploadStatus = ppbPcService.readDataFromFile(downloadFile.getAbsoluteFile(), fileSupport);
+					} else {
+						uploadStatus = ppbPcService.readConsumptionPrinterFiles(downloadFile.getAbsoluteFile(),
+								fileSupport);
+					}
+				}
+				if (uploadStatus) {
+					LOGGER.info("file uploaded sucessfully");
+					String sucessFolder = downloadpath + File.separator + prop.getProperty("sucess");
+					moveFiles(downloadFile.getAbsoluteFile(), sucessFolder, fileSupport.getFtpFile());
+					int fileCount = fileSupport.getFileuploadCount() + 1;
+					ftpSupport.setUploadCount(fileCount);
+					ftpSupport.setUploadStatus(uploadStatus);
+
+				} else {
+					int fileCount = fileSupport.getFileuploadCount();
+					LOGGER.info("file uploaded failed");
+					ftpSupport.setUploadCount(fileCount);
+				}
+			} else {
+				int fileCount = fileSupport.getFileuploadCount();
+				ftpSupport.setUploadCount(fileCount);
+				ftpSupport.setDownloadStatus(downLoadStatus);
+				if (fileSupport.getFileDownloadTrails() == 10) {
+					LOGGER.error("file download has failed");
+				}
+			}
+
+		} catch (Exception e) {
+			LOGGER.error("exception " + e.getMessage());
+		}
+		return ftpSupport;
+	}
+
+	/**
+	 * This method responsible for moving files to sucess folder
+	 * 
+	 * @param sourceFile
+	 * @param destinationFolder
+	 * @param ftpFile
+	 * @return file moving status
+	 */
+	public boolean moveFiles(File sourceFile, String destinationFolder, FTPFile ftpFile) {
+		File targetFolder = new File(destinationFolder);
+		if (!targetFolder.exists()) {
+			targetFolder.mkdirs();
+		}
+		boolean filemovingStatus = false;
+		try {
+			File oldFile = new File(sourceFile, ftpFile.getName());
+			if (oldFile.renameTo(new File(destinationFolder + File.separator, ftpFile.getName()))) {
+				LOGGER.info(ftpFile.getName() + "The file was moved successfully to the new folder");
+				filemovingStatus = true;
+			} else {
+				LOGGER.info(ftpFile.getName() + "The File was not moved.");
+
+			}
+
+		} catch (Exception e) {
+
+		}
+		return filemovingStatus;
+	}
+
+	public String getPcShipmentsDateFromFileName(FTPFile ftpFile) {
+		String requiredFileDate = null;
+		String fileDate = ftpFile.getName().substring(3, 11);
+		requiredFileDate = fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-" + fileDate.substring(0, 4);
+		return requiredFileDate;
+	}
+
+	public String getConsumptionDateFromFileName(FTPFile ftpFile) {
+		String requiredFileDate = null;
+		String fileDate = ftpFile.getName().substring(6, 14);
+		requiredFileDate = fileDate.substring(4, 6) + "-" + fileDate.substring(6, 8) + "-" + fileDate.substring(0, 4);
+		return requiredFileDate;
+	}
+
+	public Date getFileMaxDate(FtpSupport ftpSupport) throws ParseException {
+		Date maxDate = csvExcelDao.getLoadedFilesMaxDate(ftpSupport);
+		if (StringUtils.isEmpty(maxDate)) {
+			final DateFormat dateFormat = new SimpleDateFormat("EEE MMM dd hh:mm:ss zzz yyyy", Locale.ENGLISH);
+			maxDate = dateFormat.parse(ftpSupport.getFileDate());
+		}
+		LOGGER.info("Max File  Date " + maxDate);
+		return maxDate;
+	}
+}

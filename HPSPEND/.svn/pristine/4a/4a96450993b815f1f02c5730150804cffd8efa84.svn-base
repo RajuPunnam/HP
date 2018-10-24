@@ -1,0 +1,144 @@
+package com.techouts.hp.dto;
+
+import java.sql.Date;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+
+@Entity
+@Table(name = "printinvoices")
+@Access(value = AccessType.FIELD)
+public class PrintShipments 
+{
+	@Id
+	@GenericGenerator(name = "kaugen", strategy = "increment")
+	@GeneratedValue(generator = "kaugen")
+	@Column(name = "ID", unique = true, nullable = false)
+	private int id1;
+	@Column(name="Date")
+	private String NF_Date;
+	@Column(name="Qty")
+	private String Qty;
+	@Column(name="SKU")
+	private String Item_ID;
+	@Column(name="NFiscal")
+	private String NF_Number;
+	@Column(name="Po")
+	private String po;
+	@Column(name="PLs")
+	private String PLs;
+	@Column(name="LocalImport")
+	private String local_import;
+	@Column(name="File_Name")
+	private String file_Name;
+	@Column(name="Category")
+	private String category;
+	@Column(name="InvoiceDate",columnDefinition="DATE")
+	private Date InvoiceDate;
+	@Column(name="InvoiceQty")
+	private float InvoiceQty;
+
+	public String getCategory()
+	{
+		return category;
+	}
+
+	public void setCategory(String category)
+	{
+		this.category = category;
+	}
+
+	public String getFile_Name()
+	{
+		return file_Name;
+	}
+
+	public void setFile_Name(String file_Name)
+	{
+		this.file_Name = file_Name;
+	}
+
+	public String getNF_Date() {
+		return NF_Date;
+	}
+
+	public void setNF_Date(String nF_Date) {
+		NF_Date = nF_Date;
+	}
+
+	public String getQty() {
+		return Qty;
+	}
+
+	public void setQty(String qty) {
+		Qty = qty;
+	}
+
+	public String getItem_ID() {
+		return Item_ID;
+	}
+
+	public void setItem_ID(String item_ID) {
+		Item_ID = item_ID;
+	}
+
+	public String getNF_Number() {
+		return NF_Number;
+	}
+
+	public void setNF_Number(String nF_Number) {
+		NF_Number = nF_Number;
+	}
+
+	public String getPo() {
+		return po;
+	}
+
+	public void setPo(String po) {
+		this.po = po;
+	}
+
+	public String getPLs() {
+		return PLs;
+	}
+
+	public void setPLs(String pLs) {
+		PLs = pLs;
+	}
+
+	public String getLocal_import() {
+		return local_import;
+	}
+
+	public void setLocal_import(String local_import) {
+		this.local_import = local_import;
+	}
+
+	public Date getInvoiceDate()
+	{
+		return InvoiceDate;
+	}
+
+	public void setInvoiceDate(Date invoiceDate)
+	{
+		InvoiceDate = invoiceDate;
+	}
+
+	public float getInvoiceQty()
+	{
+		return InvoiceQty;
+	}
+
+	public void setInvoiceQty(float invoiceQty)
+	{
+		InvoiceQty = invoiceQty;
+	}
+
+}

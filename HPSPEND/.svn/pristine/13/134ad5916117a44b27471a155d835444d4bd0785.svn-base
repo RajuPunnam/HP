@@ -1,0 +1,52 @@
+package com.techouts.hp.thread;
+
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.techouts.hp.pojo.FtpSupport;
+import com.techouts.hp.service.FtpService;
+import com.techouts.hp.util.OS;
+
+@Component
+public class PrintShipmentsWorkerThread implements Runnable {
+	private static Logger LOGGER = Logger
+			.getLogger(PrintShipmentsWorkerThread.class);
+	@Resource(name = "myProps")
+	private Properties prop;
+	@Autowired
+	private FtpService ftpService;
+	@Autowired
+	private OS os;
+	private boolean methodCompleted;
+
+	@Override
+	public synchronized void run() {
+		FtpSupport ftpSupport = new FtpSupport();
+		ftpSupport.setFileDate(prop
+				.getProperty("print.shipmentstohp.staticfiledate"));
+		ftpSupport.setSubFolder(prop
+				.getProperty("sub.folder.printshipmentstohp"));
+		ftpSupport.setDownloadDir(os.getDownloadLocation());
+		ftpSupport.setFileSuffix(".csv");
+		ftpSupport.setFtpServer(prop.getProperty("ftp.flectronics.server"));
+		ftpSupport.setFtpUserName(prop.getProperty("ftp.flectronics.userId"));
+		ftpSupport.setFtpPassword(prop.getProperty("ftp.flectronics.password"));
+		try {
+			methodCompleted = false;
+			ftpService.getDownloadPrinterFiles(ftpSupport, 0);
+			LOGGER.info("print shipments compleated");
+			methodCompleted = true;
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+	}
+
+	public boolean getMethodCompStatus() {
+		return methodCompleted;
+	}
+}

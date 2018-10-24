@@ -1,0 +1,481 @@
+package com.techouts.hp.service;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import com.techouts.hp.dao.CsvExcelDao;
+import com.techouts.hp.dto.DataStatus;
+import com.techouts.hp.dto.POLT;
+import com.techouts.hp.dto.PPB;
+import com.techouts.hp.pojo.FileSupport;
+
+/**
+ * PPBService class to handle PPB files
+ * @author raju
+ *
+ */
+@Service
+public class PPBService {
+	private final static Logger LOGGER = Logger.getLogger(PPBService.class);
+	@Autowired
+	private CsvExcelDao csvExcelDao;
+	@Autowired
+	private ExcelService excelService;
+	@Resource(name = "myProps")
+	private Properties properties;
+	private static final String CODIGO_DO_ITEM = "Código do Item";
+	private static final String PRINT_CODIGO_DO_ITEM="CódigodoItem";
+	private static final String DESCRIPTION = "Description";
+	private static final String ALM = "Alm";
+	private static final String DATA_TRANS = "DataTrans";
+	private static final String TIPO_TRANSACAO = "Tipo Transação";
+	private static final String NO_OP = "No OP";
+	private static final String SKU = "SKU";
+	private static final String TOTAL_DA_OP = "Total da OP";
+	private static final String QTD_BAIXA_RECAB = "Qtd Baixa/Receb";
+	private static final String SALDO_DA_OP = "Saldo da OP";
+	private static final String HR_TRANS = "Hr Trans";
+	private static final String HR_4_HRS = "Hr +4 hrs";
+	private static final String RETRAB = "Retrab";
+	private static final String LOGIN_CODE = "Login code";
+	private static final String PRINT_LOGIN_CODE = "Código Login";
+	private static final String EST_APAFAS_TRANS = "Est apÃƒÂ³s Trans";
+	private static final String PRINT_EST_APAFAS_TRANS="Est após Trans";
+	private static final SimpleDateFormat EXISTED_FOMAT = new SimpleDateFormat(
+			"dd/MM/yyyy");
+	private static final SimpleDateFormat REQUIRED_FORMAT = new SimpleDateFormat(
+			"MM/dd/yyyy");
+	private static final SimpleDateFormat CONSUMPTION_DATE_FORMAT = new SimpleDateFormat(
+			"yyyy-MM-dd");
+
+	private static final String CONSUMPTION_PC_HEADER[] = { "Código do Item",
+			"Description", "Alm", "DataTrans", "Tipo Transação", "No OP",
+			"SKU", "Total da OP", "Qtd Baixa/Receb", "Saldo da OP", "Hr Trans",
+			"Hr +4 hrs", "Retrab", "Login code", "Est apÃƒÂ³s Trans" };
+	private static final String CONSUMPTION_PRINT_HEADER[] = {
+			"Código do Item","CódigodoItem", "Description", "Alm", "DataTrans",
+			"Tipo Transação", "No OP", "SKU", "Total da OP", "Qtd Baixa/Receb",
+			"Saldo da OP", "Hr Trans", "Hr +4 hrs", "Retrab", "Código Login",
+			"Est após Trans" };
+	private static final List<String> PPB_PRINT_HEADERS_LIST = Arrays
+			.asList(CONSUMPTION_PRINT_HEADER);
+
+	public boolean readDataFromFile(File inputLocation, FileSupport fileSupport) {
+
+		CSVParser csvFileParser = null;
+		boolean uploadStatus = false;
+		List<PPB> consumptionPcList = null;
+		String fileDate = getFileDate(fileSupport.getFtpFile());
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withFirstRecordAsHeader()
+				.withDelimiter(';').withAllowMissingColumnNames(true);
+		try {
+			csvFileParser = new CSVParser(new FileReader(inputLocation
+					+ File.separator + fileSupport.getFtpFile().getName()),
+					csvFileFormat);
+			if (!findConsumptionPcHeaders(csvFileParser.getHeaderMap())) {
+				csvFileParser = null;
+				csvFileFormat = CSVFormat.DEFAULT
+						.withHeader(CONSUMPTION_PC_HEADER).withDelimiter(';')
+						.withAllowMissingColumnNames(true);
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + fileSupport.getFtpFile().getName()),
+						csvFileFormat);
+			}
+		} catch (IllegalArgumentException illegalArgumentException) {
+			csvFileParser = null;
+			csvFileFormat = CSVFormat.DEFAULT.withHeader(CONSUMPTION_PC_HEADER)
+					.withDelimiter(';').withAllowMissingColumnNames(true);
+			try {
+				csvFileParser = new CSVParser(new FileReader(inputLocation
+						+ File.separator + fileSupport.getFtpFile().getName()),
+						csvFileFormat);
+			} catch (Exception exception) {
+				LOGGER.error(exception.getMessage());
+			}
+		} catch (Exception exception) {
+			LOGGER.error(exception.getMessage());
+		}
+		consumptionPcList = new ArrayList<PPB>();
+		try {
+			List<CSVRecord> consumptioPcRecordsList = csvFileParser
+					.getRecords();
+			if (consumptioPcRecordsList != null
+					&& consumptioPcRecordsList.size() > 0) {
+				for (int i = 1; i < consumptioPcRecordsList.size(); i++) {
+					CSVRecord consumptionRecord = consumptioPcRecordsList
+							.get(i);
+					/*
+					 * if
+					 * (!consumptionPcHeaderList.contains(consumptionRecord.get
+					 * ("Código do Item")) &&
+					 * !consumptionPcHeaderList.contains(consumptionRecord
+					 * .get("Description"))) {
+					 */
+					PPB consumptionPc = new PPB();
+					consumptionPc.setFileName(fileSupport.getFtpFile()
+							.getName());
+					consumptionPc.setFileDate(new Date(new SimpleDateFormat(
+							"MM-dd-yyyy").parse(fileDate).getTime()));
+					consumptionPc.setBu("Pc");
+					if (consumptionRecord.isMapped(CODIGO_DO_ITEM)) {
+						if (consumptionRecord.isSet(CODIGO_DO_ITEM)) {
+							String item_code = consumptionRecord
+									.get(CODIGO_DO_ITEM);
+							consumptionPc.setItem_code(item_code.trim());
+							consumptionPc.setNewPN(item_code);
+						}
+
+					}
+					if (consumptionRecord.isMapped(DESCRIPTION)) {
+						if (consumptionRecord.isSet(DESCRIPTION)) {
+							consumptionPc.setDescription(consumptionRecord.get(
+									DESCRIPTION).trim());
+						}
+					}
+					if (consumptionRecord.isMapped(ALM)) {
+						if (consumptionRecord.isSet(ALM)) {
+							consumptionPc.setAlm(consumptionRecord.get(ALM));
+						}
+					}
+					if (consumptionRecord.isMapped(DATA_TRANS)) {
+						if (consumptionRecord.isSet(DATA_TRANS)) {
+							String dataTrans = consumptionRecord
+									.get(DATA_TRANS);
+							if (!StringUtils.isEmpty(dataTrans)) {
+								dataTrans = dataTrans.trim()
+										.replaceAll(",", "");
+								if (dataTrans.matches("^[0-9/]*$*")) {
+									consumptionPc.setDataTrans(REQUIRED_FORMAT
+											.format(EXISTED_FOMAT
+													.parse(dataTrans)));
+									consumptionPc
+											.setConsumptionDate(new Date(
+													CONSUMPTION_DATE_FORMAT
+															.parse(CONSUMPTION_DATE_FORMAT
+																	.format(EXISTED_FOMAT
+																			.parse(dataTrans)))
+															.getTime()));
+								}
+							}
+						}
+					}
+					if (consumptionRecord.isMapped(TIPO_TRANSACAO)) {
+						if (consumptionRecord.isSet(TIPO_TRANSACAO)) {
+							consumptionPc.setTransaction_type(consumptionRecord
+									.get(TIPO_TRANSACAO).trim());
+						}
+					}
+
+					if (consumptionRecord.isMapped(NO_OP)) {
+						if (consumptionRecord.isSet(NO_OP)) {
+							consumptionPc.setIP(consumptionRecord.get(NO_OP));
+						}
+					}
+					if (consumptionRecord.isMapped(SKU)) {
+						if (consumptionRecord.isSet(SKU)) {
+							consumptionPc.setSKU(consumptionRecord.get(SKU)
+									.trim());
+						}
+					}
+					if (consumptionRecord.isMapped(TOTAL_DA_OP)) {
+						if (consumptionRecord.isSet(TOTAL_DA_OP)) {
+							consumptionPc.setTotal_OP(consumptionRecord
+									.get(TOTAL_DA_OP));
+						}
+					}
+
+					if (consumptionRecord.isMapped(QTD_BAIXA_RECAB)) {
+						if (consumptionRecord.isSet(QTD_BAIXA_RECAB)) {
+							consumptionPc.setLow_Qty_Receive(consumptionRecord
+									.get(QTD_BAIXA_RECAB));
+						}
+					}
+					if (consumptionRecord.isMapped(SALDO_DA_OP)) {
+						if (consumptionRecord.isSet(SALDO_DA_OP)) {
+							consumptionPc.setOP_balance(consumptionRecord
+									.get(SALDO_DA_OP));
+						}
+					}
+					if (consumptionRecord.isMapped(HR_TRANS)) {
+						if (consumptionRecord.isSet(HR_TRANS)) {
+							consumptionPc.setHr_Trans(consumptionRecord.get(
+									HR_TRANS).trim());
+						}
+					}
+					if (consumptionRecord.isMapped(HR_4_HRS)) {
+						if (consumptionRecord.isSet(HR_4_HRS)) {
+							consumptionPc.setHr__4_hrs(consumptionRecord.get(
+									HR_4_HRS).trim());
+						}
+					}
+
+					if (consumptionRecord.isMapped(RETRAB)) {
+						if (consumptionRecord.isSet(RETRAB)) {
+							consumptionPc.setRetrab(consumptionRecord.get(
+									RETRAB).trim());
+						}
+					}
+					if (consumptionRecord.isMapped(LOGIN_CODE)) {
+						if (consumptionRecord.isSet(LOGIN_CODE)) {
+							consumptionPc.setLogin_code(consumptionRecord.get(
+									LOGIN_CODE).trim());
+						}
+					}
+					if (consumptionRecord.isMapped(EST_APAFAS_TRANS)) {
+						if (consumptionRecord.isSet(EST_APAFAS_TRANS)) {
+							consumptionPc.setEst_after_Trans(consumptionRecord
+									.get(EST_APAFAS_TRANS));
+						}
+					}
+					consumptionPcList.add(consumptionPc);
+
+				}
+				if (consumptionPcList != null && consumptionPcList.size() > 0) {
+					uploadStatus = csvExcelDao
+							.insertFileData(consumptionPcList);
+					if (uploadStatus) {
+						LOGGER.info(consumptionPcList.size()
+								+ "s records inserted sucessfully");
+						DataStatus ppbDataStatus = new DataStatus();
+						ppbDataStatus.setFileDate(fileDate);
+						ppbDataStatus.setFileType("Pc");
+						ppbDataStatus.setFolderName(fileSupport
+								.getSubDirectory());
+						ppbDataStatus.setFileName(fileSupport.getFtpFile()
+								.getName());
+						ppbDataStatus.setFileUploadStatus(true);
+						ppbDataStatus.setFileReceiveDate(fileSupport
+								.getFtpFile().getTimestamp().getTime());
+						ppbDataStatus.setNoOfRecords(consumptionPcList.size());
+						csvExcelDao.saveFileInfo(ppbDataStatus);
+					}
+
+				}
+			}
+		} catch (Exception exception) {
+			LOGGER.info(exception.getMessage());
+		}
+
+		return uploadStatus;
+	}
+
+	public boolean findConsumptionPcHeaders(Map<String, Integer> headersMap) {
+		for (Entry<String, Integer> header : headersMap.entrySet()) {
+			if (!StringUtils.isEmpty(header.getKey())
+					&& header.getKey().equalsIgnoreCase(CODIGO_DO_ITEM)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public String getFileDate(FTPFile ftpFile) {
+		String file = ftpFile.getName().substring(6, 14);
+		return file.substring(4, 6) + "-" + file.substring(6, 8) + "-"
+				+ file.substring(0, 4);
+	}
+
+	public boolean readConsumptionPrinterFiles(File inputLocation,
+			FileSupport fileSupport) {
+		boolean fileUploadStatus = false;
+
+		Workbook wb = null;
+		List<PPB> consumptionPrinterList = null;
+		try {
+			if (fileSupport.getFtpFile().getName().endsWith("xlsx")
+					|| fileSupport.getFtpFile().getName().endsWith("xlsm")) {
+				wb = new XSSFWorkbook(new FileInputStream(inputLocation
+						+ File.separator + fileSupport.getFtpFile().getName()));
+			} else if (fileSupport.getFtpFile().getName().endsWith("xls")) {
+				wb = new HSSFWorkbook(new FileInputStream(inputLocation
+						+ File.separator + fileSupport.getFtpFile().getName()));
+			}
+			for (int i = 0; i < wb.getNumberOfSheets(); i++) {
+				consumptionPrinterList = new ArrayList<PPB>();
+				Sheet sheet = wb.getSheetAt(i);
+				boolean headerFound = false;
+				Map<Integer, String> consumptionPrinterHeaderMap = null;
+				Row row;
+				for (int rowCount = 0; rowCount <= sheet.getLastRowNum(); rowCount++) {
+					boolean insertRow = true;
+					row = sheet.getRow(rowCount);
+					if (findEmptyRow(row)) {
+
+					} else if (!headerFound) {
+						consumptionPrinterHeaderMap = null;
+						consumptionPrinterHeaderMap = getConsumptionPrintSheetheaders(row);
+						if (consumptionPrinterHeaderMap != null
+								&& consumptionPrinterHeaderMap.size() >= PPB_PRINT_HEADERS_LIST
+										.size() / 2) {
+							headerFound = true;
+						}
+					} else {
+						if (consumptionPrinterHeaderMap != null) {
+							PPB consumptionPrint = new PPB();
+							consumptionPrint.setFileName(fileSupport
+									.getFtpFile().getName());
+							consumptionPrint.setBu("Print");
+							for (Entry<Integer, String> entry : consumptionPrinterHeaderMap
+									.entrySet()) {
+								String cellValue = excelService.getCellData(
+										(row.getCell(entry.getKey()))).trim();
+								if (entry.getValue().equals(CODIGO_DO_ITEM) || entry.getValue().equals(PRINT_CODIGO_DO_ITEM)) {
+									if (!StringUtils.isEmpty(cellValue)) {
+										consumptionPrint
+												.setItem_code(cellValue);
+										consumptionPrint.setNewPN(cellValue);
+										insertRow = true;
+									} else {
+										insertRow = false;
+									}
+								} else if (entry.getValue().equals(DESCRIPTION)) {
+									consumptionPrint.setDescription(cellValue);
+								} else if (entry.getValue().equals(ALM)) {
+									consumptionPrint.setAlm(cellValue);
+
+								} else if (entry.getValue().equals(DATA_TRANS)) {
+									if (!StringUtils.isEmpty(cellValue)) {
+										cellValue = cellValue.replaceAll(",",
+												"");
+										if (cellValue.matches("^[0-9/]*$*")) {
+											consumptionPrint
+													.setDataTrans(REQUIRED_FORMAT
+															.format(REQUIRED_FORMAT
+																	.parse(cellValue)));
+											consumptionPrint
+													.setConsumptionDate(new Date(
+															CONSUMPTION_DATE_FORMAT
+																	.parse(CONSUMPTION_DATE_FORMAT
+																			.format(REQUIRED_FORMAT
+																					.parse(cellValue)))
+																	.getTime()));
+										}
+									}
+								} else if (entry.getValue().equals(
+										TIPO_TRANSACAO)) {
+									consumptionPrint
+											.setTransaction_type(cellValue);
+								} else if (entry.getValue().equals(NO_OP)) {
+									consumptionPrint.setIP(cellValue);
+								} else if (entry.getValue().equals(SKU)) {
+									consumptionPrint.setSKU(cellValue);
+								} else if (entry.getValue().equals(TOTAL_DA_OP)) {
+									consumptionPrint.setTotal_OP(cellValue);
+								} else if (entry.getValue().equals(
+										QTD_BAIXA_RECAB)) {
+									consumptionPrint
+											.setLow_Qty_Receive(cellValue);
+								} else if (entry.getValue().equals(SALDO_DA_OP)) {
+									consumptionPrint.setOP_balance(cellValue);
+								} else if (entry.getValue().equals(HR_TRANS)) {
+									consumptionPrint.setHr_Trans(cellValue);
+								} else if (entry.getValue().equals(HR_4_HRS)) {
+									consumptionPrint.setHr__4_hrs(cellValue);
+								} else if (entry.getValue().equals(RETRAB)) {
+									consumptionPrint.setRetrab(cellValue);
+								} else if (entry.getValue().equals(
+										PRINT_LOGIN_CODE)) {
+									consumptionPrint.setLogin_code(cellValue);
+								} else if (entry.getValue().equals(
+										EST_APAFAS_TRANS) || entry.getValue().equals(PRINT_EST_APAFAS_TRANS)) {
+									consumptionPrint
+											.setEst_after_Trans(cellValue);
+								}
+							}
+							if (insertRow) {
+								consumptionPrinterList.add(consumptionPrint);
+							}
+						}
+					}
+				}
+				try {
+					if (consumptionPrinterList.size() > 0) {
+						if (csvExcelDao.insertFileData(consumptionPrinterList)) {
+							fileUploadStatus = true;
+							LOGGER.info(consumptionPrinterList.size()
+									+ " records uploded sucessfully");
+							DataStatus dataStatus = new DataStatus();
+							dataStatus.setFolderName(fileSupport
+									.getSubDirectory());
+							dataStatus.setFileType("Print");
+							dataStatus.setFileName(fileSupport.getFtpFile()
+									.getName());
+							dataStatus.setFileUploadStatus(true);
+							dataStatus.setFileReceiveDate(fileSupport
+									.getFtpFile().getTimestamp().getTime());
+							dataStatus.setNoOfRecords(consumptionPrinterList
+									.size());
+							csvExcelDao.saveFileInfo(dataStatus);
+
+						}
+					} else {
+						LOGGER.info("no records found");
+					}
+				} catch (Exception exception) {
+					LOGGER.error(exception.getMessage());
+				}
+			}
+		} catch (Exception exception) {
+			LOGGER.error(exception.getMessage());
+		} catch (Throwable throwable) {
+			LOGGER.error(throwable.getMessage());
+		}
+
+		return fileUploadStatus;
+	}
+
+	private boolean findEmptyRow(Row row) {
+		boolean emptyRow = false;
+		for (int i = 0; i < row.getLastCellNum(); i++) {
+			if (row.getCell(i, Row.RETURN_BLANK_AS_NULL) == null) {
+				emptyRow = true;
+				continue;
+			} else {
+				return false;
+			}
+		}
+		return emptyRow;
+	}
+
+	public Map<Integer, String> getConsumptionPrintSheetheaders(Row row) {
+		Map<Integer, String> headerMap = new LinkedHashMap<Integer, String>();
+		for (int i = 0; i < row.getLastCellNum(); i++) {
+			Cell cell = row.getCell(i);
+			if (cell != null) {
+				String columnName = cell.getStringCellValue().trim();
+				if (!StringUtils.isEmpty(columnName)
+						&& PPB_PRINT_HEADERS_LIST.contains(columnName)) {
+					headerMap.put(cell.getColumnIndex(), columnName);
+				}
+			}
+		}
+		return headerMap;
+	}
+}

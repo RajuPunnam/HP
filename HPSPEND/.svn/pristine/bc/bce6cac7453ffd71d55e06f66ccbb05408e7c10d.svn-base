@@ -1,0 +1,142 @@
+package com.techouts.hp.dto;
+
+import java.util.Date;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+
+@Entity
+@Table(name = "spendstatus")
+@Access(value = AccessType.FIELD)
+public class DataStatus {
+	@Id
+	@GenericGenerator(name = "kaugen", strategy = "increment")
+	@GeneratedValue(generator = "kaugen")
+	@Column(name = "ID", unique = true, nullable = false)
+	private int id1;
+	@Column(name = "FOLDER_NAME")
+	private String folderName;
+	@Column(name = "FILE_TYPE")
+	private String fileType;
+	@Column(name = "SHEET_NAME")
+	private String sheetName;
+	@Column(name = "LAST_RECORDED_ROW_NUMBER")
+	private int lastLodedRowNumber;
+	@Column(name = "FILE_DATE")
+	private String fileDate;
+	@Column(name = "FILE_NAME")
+	private String fileName;
+	@Column(name = "FILE_UPLOAD_STATUS")
+	private boolean fileUploadStatus;
+	@Column(name = "File_RECEIVED_DATE")
+	private Date fileReceiveDate;
+	@Column(name="NO_OF_RECORDS")
+	private long noOfRecords;
+	@Column(name="FILE_UPLOAD_DATE")
+	private Date fileUploadDate=new Date();
+
+	public long getNoOfRecords() {
+		return noOfRecords;
+	}
+
+	public void setNoOfRecords(long noOfRecords) {
+		this.noOfRecords = noOfRecords;
+	}
+
+	public String getFolderName() {
+		return folderName;
+	}
+
+	public void setFolderName(String folderName) {
+		this.folderName = folderName;
+	}
+
+	public String getFileType() {
+		return fileType;
+	}
+
+	public void setFileType(String fileType) {
+		this.fileType = fileType;
+	}
+
+	public String getSheetName() {
+		return sheetName;
+	}
+
+	public void setSheetName(String sheetName) {
+		this.sheetName = sheetName;
+	}
+
+	public int getId1() {
+		return id1;
+	}
+
+	public void setId1(int id1) {
+		this.id1 = id1;
+	}
+
+	public int getLastLodedRowNumber() {
+		return lastLodedRowNumber;
+	}
+
+	public void setLastLodedRowNumber(int lastLodedRowNumber) {
+		this.lastLodedRowNumber = lastLodedRowNumber;
+	}
+
+	public String getFileDate() {
+		return fileDate;
+	}
+
+	public void setFileDate(String fileDate) {
+		this.fileDate = fileDate;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public boolean isFileUploadStatus() {
+		return fileUploadStatus;
+	}
+
+	public void setFileUploadStatus(boolean fileUploadStatus) {
+		this.fileUploadStatus = fileUploadStatus;
+	}
+
+	public Date getFileReceiveDate() {
+		return fileReceiveDate;
+	}
+
+	public void setFileReceiveDate(Date fileReceiveDate) {
+		this.fileReceiveDate = fileReceiveDate;
+	}
+
+	public Date getFileUploadDate() {
+		return fileUploadDate;
+	}
+
+	public void setFileUploadDate(Date fileUploadDate) {
+		this.fileUploadDate = fileUploadDate;
+	}
+
+	@Override
+	public String toString() {
+		return "DataStatus [id1=" + id1 + ", folderName=" + folderName
+				+ ", fileType=" + fileType + ", sheetName=" + sheetName
+				+ ", lastRowNumer=" + lastLodedRowNumber + ", fileDate="
+				+ fileDate + ", fileName=" + fileName + ", fileUploadStatus="
+				+ fileUploadStatus + "]";
+	}
+
+}

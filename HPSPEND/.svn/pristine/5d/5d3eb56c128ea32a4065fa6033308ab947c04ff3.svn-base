@@ -1,0 +1,86 @@
+package com.techouts.hp.service;
+
+import java.util.Date;
+
+import javax.mail.internet.MimeMessage;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Required;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.messaging.MessagingException;
+import org.springframework.stereotype.Service;
+
+@Service
+public class MailService 
+{
+	private static Logger LOGGER = Logger.getLogger(MailService.class);
+	private  static final String SUBJECT="Status of "+new Date()+" uploaded files";
+	private static final String BODY="Hai All,\n\t Spend Raw Data Status Sheet.\n Please find the fallowing attachment.\n\n Regards,\n";
+	private JavaMailSenderImpl javaMailSenderImpl;
+	private String toAddress;
+	private String fromAddress;
+	private String ccAddress;
+	private String bccAddress;
+	public JavaMailSenderImpl getJavaMailSenderImpl() {
+		return javaMailSenderImpl;
+	}
+	public void setJavaMailSenderImpl(JavaMailSenderImpl javaMailSenderImpl) {
+		this.javaMailSenderImpl = javaMailSenderImpl;
+	}
+	public String getToAddress() {
+		return toAddress;
+	}
+	@Required
+	public void setToAddress(String toAddress) {
+		this.toAddress = toAddress;
+	}
+	public String getFromAddress() {
+		return fromAddress;
+	}
+	@Required
+	public void setFromAddress(String fromAddress) {
+		this.fromAddress = fromAddress;
+	}
+	public String getCcAddress() {
+		return ccAddress;
+	}
+	public void setCcAddress(String ccAddress) {
+		this.ccAddress = ccAddress;
+	}
+	public String getBccAddress() {
+		return bccAddress;
+	}
+	public void setBccAddress(String bccAddress) {
+		this.bccAddress = bccAddress;
+	}
+	
+	public void sendMail(String subject, String body) 
+	{
+		SimpleMailMessage mailMessage = new SimpleMailMessage();
+		mailMessage.setFrom(getFromAddress());
+		mailMessage.setTo(getToAddress());
+		mailMessage.setCc(getCcAddress());
+		mailMessage.setBcc(getBccAddress());
+		mailMessage.setSubject(subject);
+		mailMessage.setText("Hai All,\n\t"+body+"\n\n Regards,\n"+getJavaMailSenderImpl().getUsername()+".");
+		getJavaMailSenderImpl().send(mailMessage);
+	}
+	public void sendFilesStatusMail(String fileLoca) throws MessagingException, javax.mail.MessagingException
+	{
+		    String body=BODY+getJavaMailSenderImpl().getUsername()+".";
+		    MimeMessage message = getJavaMailSenderImpl().createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true);
+			helper.setFrom(getFromAddress());
+			helper.setTo(getToAddress());
+			helper.setCc(getCcAddress());
+			helper.setBcc(getBccAddress());
+			helper.setSubject(SUBJECT);
+			helper.setText(body);
+			FileSystemResource file = new FileSystemResource(fileLoca);
+			helper.addAttachment(file.getFilename(), file);
+			getJavaMailSenderImpl().send(message);
+	}
+}

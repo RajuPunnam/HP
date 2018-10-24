@@ -1,0 +1,217 @@
+package com.techouts.hp.dto;
+
+import java.sql.Date;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+
+@Entity
+@Table(name = "POLeadTimeReport")
+@Access(value = AccessType.FIELD)
+public class Polt
+{
+	@Id
+	@GenericGenerator(name = "kaugen", strategy = "increment")
+	@GeneratedValue(generator = "kaugen")
+	@Column(name = "ID", unique = true, nullable = false)
+	private int id1;
+	@Column(name = "SHEET_NAME")
+	private String sheetName;
+	@Column(name = "Date")
+	private String fileDate;
+	@Column(name = "Supplier")
+	private String supplier;
+	@Column(name = "PO")
+	private String po;
+	@Column(name = "Line")
+	private String line;
+	@Column(name = "POLine")
+	private String poline;
+	@Column(name = "PODate")
+	private String podate;
+	@Column(name = "item")
+	private String item;
+	@Column(name = "Confirmed_delivery")
+	private String receiptDate;
+	@Column(name = "Qty")
+	private String qty;
+	@Column(name = "BU")
+	private String Bu;
+	@Column(name = "ROW_NUMBER")
+	private int rowNumber;
+	@Column(name = "newPODate",columnDefinition="DATE")
+	private Date newPODate;
+	@Column(name = "newFileDate",columnDefinition="DATE")
+	private Date newFileDate;
+	@Column(name = "newConfirmedDelivery",columnDefinition="DATE")
+	private Date newConfirmedDelivery;
+
+	public int getRowNumber()
+	{
+		return rowNumber;
+	}
+
+	public void setRowNumber(int rowNumber)
+	{
+		this.rowNumber = rowNumber;
+	}
+
+	public String getBu()
+	{
+		return Bu;
+	}
+
+	public void setBu(String bu)
+	{
+		Bu = bu;
+	}
+
+	public String getSheetName()
+	{
+		return sheetName;
+	}
+
+	public void setSheetName(String sheetName)
+	{
+		this.sheetName = sheetName;
+	}
+
+	public String getFileDate()
+	{
+		return fileDate;
+	}
+
+	public void setFileDate(String fileDate)
+	{
+		this.fileDate = fileDate;
+	}
+
+	public String getSupplier()
+	{
+		return supplier;
+	}
+
+	public void setSupplier(String supplier)
+	{
+		this.supplier = supplier;
+	}
+
+	public String getPo()
+	{
+		return po;
+	}
+
+	public void setPo(String po)
+	{
+		this.po = po;
+	}
+
+	public String getLine()
+	{
+		return line;
+	}
+
+	public void setLine(String line)
+	{
+		this.line = line;
+	}
+
+	public String getPoline()
+	{
+		return poline;
+	}
+
+	public int getId1()
+	{
+		return id1;
+	}
+
+	public void setId1(int id1)
+	{
+		this.id1 = id1;
+	}
+
+	public void setPoline(String poline)
+	{
+		this.poline = poline;
+	}
+
+	public String getPodate()
+	{
+		return podate;
+	}
+
+	public void setPodate(String podate)
+	{
+		this.podate = podate;
+	}
+
+	public String getItem()
+	{
+		return item;
+	}
+
+	public void setItem(String item)
+	{
+		this.item = item;
+	}
+
+	public String getReceiptDate()
+	{
+		return receiptDate;
+	}
+
+	public void setReceiptDate(String receiptDate)
+	{
+		this.receiptDate = receiptDate;
+	}
+
+	public String getQty()
+	{
+		return qty;
+	}
+
+	public Date getNewPODate()
+	{
+		return newPODate;
+	}
+
+	public void setNewPODate(Date newPODate)
+	{
+		this.newPODate = newPODate;
+	}
+
+	public Date getNewFileDate()
+	{
+		return newFileDate;
+	}
+
+	public void setNewFileDate(Date newFileDate)
+	{
+		this.newFileDate = newFileDate;
+	}
+
+	public Date getNewConfirmedDelivery()
+	{
+		return newConfirmedDelivery;
+	}
+
+	public void setNewConfirmedDelivery(Date newConfirmedDelivery)
+	{
+		this.newConfirmedDelivery = newConfirmedDelivery;
+	}
+
+	public void setQty(String qty)
+	{
+		this.qty = qty;
+	}
+
+}

@@ -1,0 +1,30 @@
+package com.techouts.hp.dao;
+
+import java.util.Calendar;
+import java.util.List;
+
+import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import com.techouts.hp.dto.DataStatus;
+
+@Repository
+public class StatusDao {
+	@Autowired
+	private SessionFactory sessionFactory;
+
+	public List<DataStatus> getCurrentDayUploadFilesList() {
+		Calendar now = Calendar.getInstance();
+        now.set(Calendar.HOUR, 0);
+        now.set(Calendar.MINUTE, 0);
+        now.set(Calendar.SECOND, 0);
+		Criteria criteria = sessionFactory.openSession().createCriteria(DataStatus.class);
+		criteria.add(Restrictions.eq("fileUploadStatus", true));
+		criteria.add(Restrictions.ge("fileUploadDate", now.getTime()));
+		return criteria.list();
+
+	}
+}

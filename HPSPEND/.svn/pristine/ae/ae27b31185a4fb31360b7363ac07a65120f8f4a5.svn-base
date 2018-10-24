@@ -1,0 +1,239 @@
+package com.techouts.hp.dao;
+
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import com.techouts.hp.dto.DataStatus;
+import com.techouts.hp.dto.PcShipmentsToHp;
+import com.techouts.hp.dto.POLT;
+import com.techouts.hp.dto.PPB;
+import com.techouts.hp.pojo.FtpSupport;
+import com.techouts.hp.service.PcShipmentsToHpService;
+
+/**
+ * CsvExcelDao class for  CRUD operations
+ * @author raju.p
+ *
+ */
+@Repository
+public class CsvExcelDao {
+	private static final Logger LOGGER = Logger.getLogger(CsvExcelDao.class);
+	@Autowired
+	private SessionFactory sessionFactory;
+
+	/**
+	 * insert files data
+	 * @param datalist
+	 * @return uploadStatus
+	 */
+	public boolean insertFileData(List<?> datalist) {
+		boolean uploadStatus = false;
+		Session session = null;
+		Transaction transaction = null;
+		try {
+			session = sessionFactory.openSession();
+			transaction = session.beginTransaction();
+			for (int i = 0; i < datalist.size(); i++) {
+				session.save(datalist.get(i));
+			}
+			transaction.commit();
+			uploadStatus = true;
+			session.evict(datalist);
+
+		} catch (Exception exception) {
+			transaction.rollback();
+			LOGGER.info(exception.getMessage());
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return uploadStatus;
+	}
+/**
+ * updates the file info
+ * @param dataStatus
+ */
+	public void saveFileInfo(final DataStatus dataStatus) {
+		Session session = sessionFactory.openSession();
+		Transaction transaction = null;
+		try {
+			transaction = session.beginTransaction();
+			session.save(dataStatus);
+			transaction.commit();
+			session.evict(dataStatus);
+		} catch (Exception exception) {
+			transaction.rollback();
+			LOGGER.info(exception.getMessage());
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+	}
+/**
+ * this method to fetch distinct file names of individual files
+ * @param folderName
+ * @param bu
+ * @return filelist
+ */
+	public List<String> getDistinctFileNames(String folderName, String bu) {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				DataStatus.class);
+		criteria.add(Restrictions.eq("folderName", folderName));
+		criteria.add(Restrictions.eq("fileType", bu));
+		criteria.add(Restrictions.eq("fileUploadStatus", true));
+		criteria.setProjection(Projections.distinct(Projections
+				.property("fileName")));
+		return criteria.list();
+	}
+/**
+ * This method for distinct sheeet Names of POLT pc files
+ * @param fileName
+ * @return sheetlist
+ */
+	public List<String> getDistinctSheetNamesOfPoltPc(String fileName) {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				DataStatus.class);
+		criteria.add(Restrictions.eq("folderName", "PO LT"));
+		criteria.add(Restrictions.eq("fileType", "Pc"));
+		criteria.add(Restrictions.eq("fileUploadStatus", true));
+		criteria.setProjection(Projections.distinct(Projections
+				.property("sheetName")));
+		return criteria.list();
+	}
+	/**
+	 * This method for distinct sheeet Names of POLT pc files
+	 * @param fileName
+	 * @return sheetlist
+	 */
+	public List<String> getDistinctSheetNames() {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				POLT.class);
+		criteria.add(Restrictions.eq("Bu", "Pc"));
+		criteria.setProjection(Projections.distinct(Projections
+				.property("sheetName")));
+		return criteria.list();
+	}
+/**
+ * to get last recorded row number of POLT files
+ * @param fileName
+ * @return lastrecord number of POLT file
+ */
+	public int getLastRecordedRowNumber(String fileName) {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				DataStatus.class);
+		criteria.add(Restrictions.eq("fileName", fileName));
+		criteria.add(Restrictions.eq("folderName", "PO LT"));
+		criteria.add(Restrictions.eq("fileType", "Print"));
+		criteria.setProjection(Projections.max("lastLodedRowNumber"));
+		Integer maxRowNumber = (Integer) criteria.uniqueResult();
+		if (maxRowNumber == null) {
+			return 0;
+		} else {
+			return Integer.valueOf(maxRowNumber);
+		}
+	}
+	/**
+	 * to get last recorded row number of POLT files
+	 * @param fileName
+	 * @return lastrecord number of POLT file
+	 */
+	public int getLastRecordedRowNumberOFPoltPrinter() {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				POLT.class);
+		criteria.add(Restrictions.eq("Bu", "Print"));
+		criteria.setProjection(Projections.max("rowNumber"));
+		Integer maxRowNumber = (Integer) criteria.uniqueResult();
+		if (maxRowNumber == null) {
+			return 0;
+		} else {
+			return Integer.valueOf(maxRowNumber);
+		}
+	}
+/**
+ * Gets the last loaded record row number from Print invoice
+ * @param folderName
+ * @param fileName
+ * @param sheetName
+ * @return
+ */
+	public int getLastRecordedRowNumberOFInvoicesPrint(String folderName,
+			String fileName, String sheetName) {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				DataStatus.class);
+		criteria.add(Restrictions.eq("fileName", fileName));
+		criteria.add(Restrictions.eq("folderName", folderName));
+		criteria.add(Restrictions.eq("sheetName", sheetName));
+		criteria.add(Restrictions.eq("fileType", "Print"));
+		criteria.setProjection(Projections.max("lastLodedRowNumber"));
+		Integer maxRowNumber = (Integer) criteria.uniqueResult();
+		if (maxRowNumber == null) {
+			return 0;
+		} else {
+			return Integer.valueOf(maxRowNumber);
+		}
+	}
+/**
+ * Gets the distinct consumption files list 
+ * @param folderName
+ * @return filelist
+ */
+	public List<?> getDistinctConsumptionFileNames(String folderName) {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				DataStatus.class);
+		criteria.add(Restrictions.eq("folderName", folderName));
+		criteria.add(Restrictions.eq("fileUploadStatus", true));
+		criteria.setProjection(Projections.distinct(Projections
+				.property("fileName")));
+		return criteria.list();
+	}
+/**
+ * Gets the distinct pcshipments files list
+ * @return fileslist
+ */
+	public List<?> getDistinctPcShipmentsFiles() {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				PcShipmentsToHp.class);
+		criteria.setProjection(Projections.distinct(Projections
+				.property("fileName")));
+		return criteria.list();
+
+	}
+/**
+ * Gets the distinct file Names from PPB
+ * @return fileslist
+ */
+	public List<?> getDistinctConsumptionFileNamesList() {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				PPB.class);
+		criteria.setProjection(Projections.distinct(Projections
+				.property("fileName")));
+		return criteria.list();
+	}
+/**
+ * Gets the latest file date from loaded files
+ * @param ftpSupport
+ * @return maxDate
+ */
+	public Date getLoadedFilesMaxDate(FtpSupport ftpSupport) {
+		Criteria criteria = sessionFactory.openSession().createCriteria(
+				DataStatus.class);
+		criteria.add(Restrictions.eq("folderName", ftpSupport.getSubFolder()));
+		criteria.add(Restrictions.eq("fileUploadStatus", true));
+		criteria.setProjection(Projections.max("fileReceiveDate"));
+		return (Date) criteria.uniqueResult();
+	}
+}

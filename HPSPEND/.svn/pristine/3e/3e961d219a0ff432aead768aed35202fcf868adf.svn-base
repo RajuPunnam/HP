@@ -1,0 +1,277 @@
+package com.techouts.hp.dto;
+
+import java.sql.Date;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+
+@Entity
+@Table(name = "PPB_Consumption")
+@Access(value = AccessType.FIELD)
+public class PPB 
+{
+	@Id
+	@GenericGenerator(name = "kaugen", strategy = "increment")
+	@GeneratedValue(generator = "kaugen")
+	@Column(name = "ID", unique = true, nullable = false)
+	private int id1;
+	@Column(name="File_Date",columnDefinition="DATE")
+	private Date fileDate;
+	@Column(name="File_Name")
+	private String fileName;
+	@Column(name="PN")
+	private String Item_code;
+	@Column(name="PNDescription")
+	private String Description;
+	@Column(name="Alm")
+	private String Alm;
+	@Column(name="DataTrans")
+	private String DataTrans;
+	@Column(name="TransHr")
+	private String hr_Trans;
+	@Column(name="Hr4hrs")
+	private String Hr__4_hrs;
+	@Column(name="Transacton_type")
+	private String Transaction_type;
+	@Column(name="IP")
+	private String IP;
+	@Column(name="SKU")
+	private String SKU;
+	@Column(name="Total_op")
+	private String Total_OP;
+	@Column(name="Qty_Low_Receive")
+	private String Low_Qty_Receive;
+	@Column(name="Op_balance")
+	private String OP_balance;
+	@Column(name="Est_afterTrans")
+	private String Est_after_Trans;
+	@Column(name="Retrab")
+	private String Retrab;
+	@Column(name="Login_code")
+	private String Login_code;
+	@Column(name="BU")
+	private String Bu;
+	@Column(name="ConsumptionDate",columnDefinition="DATE")
+	private Date ConsumptionDate;
+	@Column(name="newPN")
+	private String newPN;
+
+
+
+	public String getItem_code()
+	{
+		return Item_code;
+	}
+
+	public void setItem_code(String item_code)
+	{
+		Item_code = item_code;
+	}
+
+	public String getDescription()
+	{
+		return Description;
+	}
+
+	public void setDescription(String description)
+	{
+		Description = description;
+	}
+
+	public String getAlm()
+	{
+		return Alm;
+	}
+
+	public void setAlm(String alm)
+	{
+		Alm = alm;
+	}
+
+	public String getDataTrans()
+	{
+		return DataTrans;
+	}
+
+	public void setDataTrans(String dataTrans)
+	{
+		DataTrans = dataTrans;
+	}
+
+	public String getHr_Trans()
+	{
+		return hr_Trans;
+	}
+
+	public void setHr_Trans(String hr_Trans)
+	{
+		this.hr_Trans = hr_Trans;
+	}
+
+	public Date getFileDate() {
+		return fileDate;
+	}
+
+	public void setFileDate(Date fileDate) {
+		this.fileDate = fileDate;
+	}
+
+	public String getHr__4_hrs()
+	{
+		return Hr__4_hrs;
+	}
+
+	public void setHr__4_hrs(String hr__4_hrs)
+	{
+		Hr__4_hrs = hr__4_hrs;
+	}
+
+	public int getId1() {
+		return id1;
+	}
+
+	public void setId1(int id1) {
+		this.id1 = id1;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public String getTransaction_type()
+	{
+		return Transaction_type;
+	}
+
+	public void setTransaction_type(String transaction_type)
+	{
+		Transaction_type = transaction_type;
+	}
+
+	public String getIP()
+	{
+		return IP;
+	}
+
+	public void setIP(String iP)
+	{
+		IP = iP;
+	}
+
+	public String getSKU()
+	{
+		return SKU;
+	}
+
+	public void setSKU(String sKU)
+	{
+		SKU = sKU;
+	}
+
+	public String getTotal_OP()
+	{
+		return Total_OP;
+	}
+
+	public void setTotal_OP(String total_OP)
+	{
+		Total_OP = total_OP;
+	}
+
+	public String getLow_Qty_Receive()
+	{
+		return Low_Qty_Receive;
+	}
+
+	public void setLow_Qty_Receive(String low_Qty_Receive)
+	{
+		Low_Qty_Receive = low_Qty_Receive;
+	}
+
+	public String getOP_balance()
+	{
+		return OP_balance;
+	}
+
+	public void setOP_balance(String oP_balance)
+	{
+		OP_balance = oP_balance;
+	}
+
+	public String getEst_after_Trans()
+	{
+		return Est_after_Trans;
+	}
+
+	public void setEst_after_Trans(String est_after_Trans)
+	{
+		Est_after_Trans = est_after_Trans;
+	}
+
+	public String getRetrab()
+	{
+		return Retrab;
+	}
+
+	public void setRetrab(String retrab)
+	{
+		Retrab = retrab;
+	}
+
+
+	public String getLogin_code()
+	{
+		return Login_code;
+	}
+
+	public void setLogin_code(String login_code)
+	{
+		Login_code = login_code;
+	}
+
+	
+
+	public String getBu()
+	{
+		return Bu;
+	}
+
+	public void setBu(String bu)
+	{
+		Bu = bu;
+	}
+
+	public Date getConsumptionDate()
+	{
+		return ConsumptionDate;
+	}
+
+	public void setConsumptionDate(Date consumptionDate)
+	{
+		ConsumptionDate = consumptionDate;
+	}
+
+	public String getNewPN()
+	{
+		return newPN;
+	}
+
+	public void setNewPN(String newPN)
+	{
+		this.newPN = newPN;
+	}
+
+	
+
+}

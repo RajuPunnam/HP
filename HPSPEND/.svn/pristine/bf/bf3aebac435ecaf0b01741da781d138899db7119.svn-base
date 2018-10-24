@@ -1,0 +1,79 @@
+package com.techouts.hp.controller;
+
+import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.MessagingException;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.techouts.hp.thread.PcShipmentsToHpWorkerThread;
+import com.techouts.hp.thread.POLTWorkerThread;
+import com.techouts.hp.thread.PPBWorkerThread;
+import com.techouts.hp.thread.PrintShipmentsWorkerThread;
+import com.techouts.hp.util.OS;
+
+/**
+ * SpendDataProcessController for processing all spend files
+ * @author raju.p
+ *
+ */
+@Controller
+public class SpendDataProcessController extends AbstractDataprocessController {
+	private static final Logger LOGGER = Logger
+			.getLogger(SpendDataProcessController.class);
+	@Autowired
+	private OS os;
+ /**
+  * calls all spend worker threds
+  * @param model
+  * @return spendreport.jsp
+  * @throws InterruptedException
+  * @throws MessagingException
+  * @throws javax.mail.MessagingException
+  * @throws IOException
+  */
+	@RequestMapping(value = "/spendprocess")
+	public String loadSpendFiles(Model model) throws InterruptedException,
+			MessagingException, javax.mail.MessagingException, IOException {
+		//getThreadPoolTaskExecutor().execute(getPrintShipmentsWorkerThread());
+		getThreadPoolTaskExecutor().execute(getPoltWorkerThread());
+	    getThreadPoolTaskExecutor().execute(getPcShipmentsToHpWorkerThread());
+		getThreadPoolTaskExecutor().execute(getPpbPcWorker());
+		for (int i = 1; i <= 30; i++) {
+			TimeUnit.MINUTES.sleep(1);
+			if (getPoltWorkerThread().getMethodCompStatus()) {
+				/*if (getPrintShipmentsWorkerThread().getMethodCompStatus()) {*/
+					if (getPcShipmentsToHpWorkerThread()
+							.getMethodCompleationStatus()) {
+						if (getPpbPcWorker()
+								.getConsumptionPcDownloadMethodCompleationStatus()) {
+							LOGGER.info("All Threads compleated ");
+							break;
+						}
+					/*}*/
+				}
+			}
+		}
+		getMailserivice().sendFilesStatusMail(
+				getStatusService().getUploadedFilesList());
+		model.addAttribute("filesList", getStatusService()
+				.getCurrentDayUploadedFilesList());
+	model.addAttribute("machineip",os.getIP());
+		return "spendreport.jsp";
+	}
+	@RequestMapping(value="/refresh")
+	public String getCurrentDayUploadedFiles(Model model)
+	{
+		model.addAttribute("filesList", getStatusService()
+				.getCurrentDayUploadedFilesList());
+		model.addAttribute("machineip",os.getIP());
+		return "spendreport.jsp";
+	}
+}

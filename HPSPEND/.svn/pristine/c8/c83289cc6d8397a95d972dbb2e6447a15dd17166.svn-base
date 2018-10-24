@@ -1,0 +1,96 @@
+package com.techouts.hp.pojo;
+
+public class FtpSupport {
+
+	private boolean downloadStatus;
+	private boolean uploadStatus;
+	private String subFolder;
+	private String fileDate;
+	private int uploadCount;
+	private String downloadDir;
+	private String fileSuffix;
+	private String ftpServer;
+	private String ftpPassword;
+	private String ftpUserName;
+
+	public boolean isDownloadStatus() {
+		return downloadStatus;
+	}
+
+	public void setDownloadStatus(boolean downloadStatus) {
+		this.downloadStatus = downloadStatus;
+	}
+
+	public boolean isUploadStatus() {
+		return uploadStatus;
+	}
+
+	public void setUploadStatus(boolean uploadStatus) {
+		this.uploadStatus = uploadStatus;
+	}
+
+	public String getSubFolder() {
+		return subFolder;
+	}
+
+	public void setSubFolder(String subFolder) {
+		this.subFolder = subFolder;
+	}
+
+	public String getFileDate() {
+		return fileDate;
+	}
+
+	public void setFileDate(String fileDate) {
+		this.fileDate = fileDate;
+	}
+
+	public int getUploadCount() {
+		return uploadCount;
+	}
+
+	public void setUploadCount(int uploadCount) {
+		this.uploadCount = uploadCount;
+	}
+
+	public String getDownloadDir() {
+		return downloadDir;
+	}
+
+	public void setDownloadDir(String downloadDir) {
+		this.downloadDir = downloadDir;
+	}
+
+	public String getFtpServer() {
+		return ftpServer;
+	}
+
+	public void setFtpServer(String ftpServer) {
+		this.ftpServer = ftpServer;
+	}
+
+	public String getFtpPassword() {
+		return ftpPassword;
+	}
+
+	public void setFtpPassword(String ftpPassword) {
+		this.ftpPassword = ftpPassword;
+	}
+
+	public String getFtpUserName() {
+		return ftpUserName;
+	}
+
+	public void setFtpUserName(String ftpUserName) {
+		this.ftpUserName = ftpUserName;
+	}
+
+	public String getFileSuffix() {
+		return fileSuffix;
+	}
+
+	public void setFileSuffix(String fileSuffix) {
+		this.fileSuffix = fileSuffix;
+	}
+
+}

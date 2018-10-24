@@ -1,0 +1,368 @@
+package com.techouts.hp.service;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.techouts.hp.dao.CsvExcelDao;
+import com.techouts.hp.dto.DataStatus;
+import com.techouts.hp.dto.PrintShipments;
+import com.techouts.hp.pojo.FileSupport;
+/**
+ * PrintShipmentsService class to handle print shipments files
+ * @author raju.p
+ *
+ */
+@Service
+public class PrintShipmentsService
+{
+	private static Logger LOGGER = Logger.getLogger(PrintShipmentsService.class);
+
+	@Autowired
+	private ExcelService excelService;
+	@Autowired
+	private CsvExcelDao csvExcelDao;
+	private SimpleDateFormat existedFormate = new SimpleDateFormat("MM/dd/yyyy");
+	private SimpleDateFormat requiredDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+	private static List<String> nfDateList = Arrays.asList("NF Date", "NFDate", "NF DATE", "NF");
+	private static List<String> qtyList = Arrays.asList("Qty", "QTY");
+	private static List<String> itemIdList = Arrays.asList("Item ID", "Item Id", "PN", "ItemId");
+	private static List<String> nfNumber = Arrays.asList("NF Number", "NFNumber", "NF");
+	private static List<String> poList = Arrays.asList("PO", "PON", "PO Number", "PONº");
+	public boolean readDataFromFile(File inputLocation, FileSupport fileSupport)
+			throws Exception
+	{
+		Workbook wb = null;
+		Sheet sheet;
+		Map<Integer, String> invoicesPrintColAndIndexMap = null;
+		FileOutputStream fos = null;
+		List<PrintShipments> printShipmentsList = null;
+		boolean uploadStatus = false;
+		String folderName = "";
+		List<String> sheetList = new ArrayList<String>();
+		sheetList.add("SHIPMENTS DETAILS");
+		sheetList.add("Exportation");
+		sheetList.add("Local");
+		sheetList.add("Local_HW");
+		sheetList.add("Detalhes embarque");
+
+		try
+		{
+			try
+			{
+				if (fileSupport.getFtpFile().getName().endsWith("xlsx") || fileSupport.getFtpFile().getName().endsWith("xlsm"))
+				{
+					wb = new XSSFWorkbook(new FileInputStream(inputLocation + File.separator + fileSupport.getFtpFile().getName()));
+				} else if (fileSupport.getFtpFile().getName().endsWith("xls"))
+				{
+					wb = new HSSFWorkbook(new FileInputStream(inputLocation + File.separator + fileSupport.getFtpFile().getName()));
+				}
+			} catch (Throwable throwable)
+			{
+				LOGGER.error("**********************" + throwable.getMessage());
+			}
+			if (fileSupport.getSubSubDirectory().equalsIgnoreCase("Hw"))
+			{
+				folderName = "/Print Shipment to HP" + "/" + fileSupport.getSubSubDirectory() + "/" + fileSupport.getSubSubSubDirectory();
+			} else if (fileSupport.getSubSubDirectory().equalsIgnoreCase("Supplies"))
+			{
+				folderName = "/Print Shipment to HP /" + fileSupport.getSubSubDirectory();
+			}
+			for (int i = 0; i < wb.getNumberOfSheets(); i++)
+			{
+				int rowNumber = 0;
+				int lastRecRowNumber = 0;
+				boolean headerFound = false;
+				printShipmentsList = new ArrayList<PrintShipments>();
+				Row row;
+				if (sheetList.contains(wb.getSheetAt(i).getSheetName()))
+				{
+					String sheetName = wb.getSheetAt(i).getSheetName();
+					sheet = wb.getSheetAt(i);
+					lastRecRowNumber = csvExcelDao.getLastRecordedRowNumberOFInvoicesPrint(folderName, fileSupport.getFtpFile().getName(), sheetName);
+					LOGGER.info("*********************");
+					LOGGER.info("FILE NAME =============================" + fileSupport.getFtpFile().getName());
+					LOGGER.info("Sheet Name ============================" + sheetName);
+					LOGGER.info("last uploaded  row number =============" + lastRecRowNumber);
+					for (int rowCount = 0; rowCount <= sheet.getLastRowNum();)
+					{
+						row = sheet.getRow(rowCount);
+						if (row == null)
+						{
+							rowCount++;
+						} else if (sheetName.equalsIgnoreCase("SHIPMENTS DETAILS") && row.getCell(4, Row.RETURN_BLANK_AS_NULL) == null)
+						{
+							rowCount++;
+						} else if (sheetName.equalsIgnoreCase("Detalhes embarque") && row.getCell(3, Row.RETURN_BLANK_AS_NULL) == null)
+						{
+							rowCount++;
+						} else if (sheetName.equalsIgnoreCase("Local_HW") && row.getCell(3, Row.RETURN_BLANK_AS_NULL) == null)
+						{
+							rowCount++;
+						} else if (sheetName.equalsIgnoreCase("Local") && row.getCell(3, Row.RETURN_BLANK_AS_NULL) == null)
+						{
+							rowCount++;
+						} else if (sheetName.equalsIgnoreCase("Exportation") && row.getCell(3, Row.RETURN_BLANK_AS_NULL) == null)
+						{
+							rowCount++;
+						} else if (!headerFound)
+						{
+							if (findHeader(row))
+							{
+									invoicesPrintColAndIndexMap = getSheetHeader(row);
+									headerFound = true;
+									if (lastRecRowNumber == 0)
+									{
+										rowCount++;
+									} else
+									{
+										rowCount = lastRecRowNumber++;
+									}
+								
+							} else
+							{
+								rowCount++;
+							}
+						} else
+						{
+							if (invoicesPrintColAndIndexMap != null)
+							{
+								PrintShipments printsShipmentsPojo = new PrintShipments();
+								printsShipmentsPojo.setFile_Name(fileSupport.getFtpFile().getName());
+								for (Entry<Integer, String> entry : invoicesPrintColAndIndexMap.entrySet())
+								{
+									String cellValue = excelService.getCellData((row.getCell(entry.getKey())));
+									if (entry.getValue().equalsIgnoreCase("Date"))
+									{
+										String nfDate = cellValue;
+										printsShipmentsPojo.setNF_Date(nfDate);
+										if (nfDate != null)
+										{
+											if (!nfDate.equals(""))
+											{
+												nfDate = nfDate.replaceAll(",", "");
+												if (nfDate.matches("^[0-9/]*$*"))
+												{
+													printsShipmentsPojo.setInvoiceDate(new Date(requiredDateFormat.parse(
+															requiredDateFormat.format(existedFormate.parse(nfDate))).getTime()));
+												}
+											}
+										}
+									} else if (entry.getValue().equalsIgnoreCase("Qty"))
+									{
+										String qty = cellValue;
+										printsShipmentsPojo.setQty(qty.trim());
+										if (qty != null)
+										{
+											if (!qty.equals(""))
+											{
+												qty = qty.replaceAll(",", "").trim();
+												if (qty.matches("^[0-9]*$*"))
+												{
+													printsShipmentsPojo.setInvoiceQty(Float.parseFloat(qty));
+												}
+											}
+										}
+
+									} else if (entry.getValue().equalsIgnoreCase("SKU"))
+									{
+
+										printsShipmentsPojo.setItem_ID(cellValue);
+									} else if (entry.getValue().equalsIgnoreCase("NFiscal"))
+									{
+										printsShipmentsPojo.setNF_Number(cellValue);
+									} else if (entry.getValue().equalsIgnoreCase("Po"))
+									{
+										printsShipmentsPojo.setPo(cellValue);
+									}
+									printsShipmentsPojo.setCategory(fileSupport.getSubSubDirectory());
+									if (fileSupport.getSubSubDirectory().equalsIgnoreCase("Hw"))
+									{
+										if (fileSupport.getSubSubSubDirectory().equalsIgnoreCase("Inkjet"))
+										{
+											printsShipmentsPojo.setPLs("Ips");
+											if (sheetName.equalsIgnoreCase("Exportation"))
+											{
+												printsShipmentsPojo.setLocal_import("Export");
+											} else if (sheetName.equalsIgnoreCase("Local"))
+											{
+												printsShipmentsPojo.setLocal_import("Local");
+											}
+										} else if (fileSupport.getSubSubSubDirectory().equalsIgnoreCase("Laser"))
+										{
+											printsShipmentsPojo.setPLs("Les");
+										}
+									} else if (fileSupport.getSubSubDirectory().equalsIgnoreCase("Supplies"))
+									{
+										if (sheetName.equalsIgnoreCase("Detalhes embarque"))
+										{
+											printsShipmentsPojo.setPLs("Les");
+										} else if (sheetName.equalsIgnoreCase("Local_HW"))
+										{
+											printsShipmentsPojo.setPLs("Ips");
+										}
+									}
+									rowNumber = rowCount;
+								}
+								printShipmentsList.add(printsShipmentsPojo);
+								if (lastRecRowNumber == 0)
+								{
+									rowCount++;
+								} else
+								{
+									rowCount = lastRecRowNumber++;
+								}
+							}
+
+						}
+
+					}
+					LOGGER.info("number of recordes found == " + printShipmentsList.size());
+					try
+					{
+						if (printShipmentsList.size() > 0)
+						{
+							uploadStatus=csvExcelDao.insertFileData(printShipmentsList);
+							if (uploadStatus)
+							{
+								LOGGER.info(printShipmentsList.size() + " recordes uploded sucessfully");
+								DataStatus invoicesPrintDataStatus = new DataStatus();
+								if (fileSupport.getSubSubDirectory().equalsIgnoreCase("Hw"))
+								{
+
+									if (fileSupport.getFtpFile().getName().contains("Closing"))
+									{
+										invoicesPrintDataStatus.setFileUploadStatus(true);
+									}
+								} else if (fileSupport.getSubSubDirectory().equalsIgnoreCase("Supplies"))
+								{
+									invoicesPrintDataStatus.setFileDate(fileSupport.getSubSubSubSubDirectory());
+									invoicesPrintDataStatus.setFileUploadStatus(true);
+								}
+								invoicesPrintDataStatus.setFolderName(folderName);
+								invoicesPrintDataStatus.setLastLodedRowNumber(rowNumber + 1);
+								invoicesPrintDataStatus.setFileType("Print");
+								invoicesPrintDataStatus.setFileName(fileSupport.getFtpFile().getName());
+								invoicesPrintDataStatus.setSheetName(sheetName);
+								csvExcelDao.saveFileInfo(invoicesPrintDataStatus);
+								LOGGER.info("*********************");
+							}
+						} else
+						{
+							LOGGER.info("No recordes uploded ");
+							LOGGER.info("*********************");
+						}
+					} catch (Exception exception)
+					{
+						LOGGER.error(exception.getMessage());
+					}
+				}
+			}
+
+		} catch (Exception e)
+		{
+			e.printStackTrace();
+			LOGGER.error("exception " + e.getMessage());
+		} finally
+		{
+			if (fos != null)
+			{
+				fos.close();
+			}
+		}
+		return uploadStatus;
+	}
+
+	private boolean findHeader(Row row)
+	{
+		boolean headerFoundStatus = false;
+		for (int i = 0; i < row.getLastCellNum(); i++)
+		{
+			Cell cell = row.getCell(i);
+			if (cell != null)
+			{
+				String columnName = excelService.getCellData(cell).trim();
+				if (nfDateList.contains(columnName))
+				{
+					headerFoundStatus = true;
+
+				} else if (qtyList.contains(columnName))
+				{
+					headerFoundStatus = true;
+
+				} else if (itemIdList.contains(columnName))
+				{
+					headerFoundStatus = true;
+
+				} else if (nfNumber.contains(columnName))
+				{
+					headerFoundStatus = true;
+
+				} else if (poList.contains(columnName))
+				{
+					headerFoundStatus = true;
+
+				}
+			}
+		}
+		return headerFoundStatus;
+	}
+
+	public Map<Integer, String> getSheetHeader(Row row)
+	{
+		Map<Integer, String> headerCollection = new LinkedHashMap<Integer, String>();
+		try
+		{
+			for (int i = 0; i < row.getLastCellNum(); i++)
+			{
+				Cell cell = row.getCell(i);
+				if (cell != null)
+				{
+					String columnName = excelService.getCellData(cell).replaceAll("\n", "");
+					if (nfDateList.contains(columnName))
+					{
+						headerCollection.put(cell.getColumnIndex(), "Date");
+					} else if (qtyList.contains(columnName))
+					{
+						headerCollection.put(cell.getColumnIndex(), "Qty");
+					} else if (itemIdList.contains(columnName))
+					{
+						headerCollection.put(cell.getColumnIndex(), "SKU");
+					} else if (nfNumber.contains(columnName))
+					{
+						headerCollection.put(cell.getColumnIndex(), "NFiscal");
+					} else if (poList.contains(columnName))
+					{
+						headerCollection.put(cell.getColumnIndex(), "Po");
+					}
+
+				}
+			}
+			LOGGER.info("header mappings" +headerCollection);
+		} catch (Exception e)
+		{
+			LOGGER.error("exception " + e.getMessage());
+		}
+		return headerCollection;
+	}
+}

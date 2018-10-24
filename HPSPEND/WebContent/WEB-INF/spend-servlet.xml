@@ -1,0 +1,74 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<mvc:annotation-driven></mvc:annotation-driven>
+	<mvc:default-servlet-handler />
+	<context:component-scan base-package="com.ts.permissions" />
+	<context:annotation-config />
+	<!--sql Database properties -->
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/test" />
+		<property name="username" value="root" />
+		<property name="password" value="techouts" />
+	</bean>
+	<!-- SQL SERVER Database properties -->
+	<!-- <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource"> 
+		<property name="driverClassName" value="net.sourceforge.jtds.jdbc.Driver" 
+		/> <property name="url" value="jdbc:jtds:sqlserver://${sqlserver.db.host}:${sqlserver.db.port}/${sqlserver.schema}" 
+		/> <property name="username" value="${sqlserver.username}" /> <property name="password" 
+		value="${sqlserver.password}" /> </bean> -->
+
+	<!-- Hibernate properties -->
+	<bean id="hibernateProperties"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="properties">
+			<props>
+				<!-- auto create/update tables -->
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<!-- <prop key="hibernate.dialect">org.hibernate.dialect.SQLServerDialect</prop> -->
+				<prop key="hibernate.dialect">org.hibernate.dialect.SQLServerDialect</prop>
+			</props>
+		</property>
+	</bean>
+
+
+	<!-- Hibernate resource file -->
+	<bean id="hibernate3AnnotatedSessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="hibernateProperties">
+			<ref bean="hibernateProperties" />
+		</property>
+		<property name="annotatedClasses">
+			<list>
+				<value>com.ts.permissions.model.UserModel</value>
+			</list>
+		</property>
+	</bean>
+	
+   <bean id="converter" class="com.ts.permissions.servicelayer.dto.converter.Converter">
+		<property name="targetClass"
+			value="com.ts.permissions.model.UserModel" />
+		<property name="populators">
+			<list>
+				<ref bean="registrationPopulator"/>
+			</list>
+		</property>
+	</bean> 
+	
+	<bean id ="registrationPopulator" class="com.ts.permissions.facades.populators.RegistrationPopulator"/>
+
+</beans>  

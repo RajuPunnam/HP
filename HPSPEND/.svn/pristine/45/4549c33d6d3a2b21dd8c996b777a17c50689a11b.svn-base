@@ -1,0 +1,568 @@
+package com.techouts.hp.service;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import com.techouts.hp.dao.CsvExcelDao;
+import com.techouts.hp.dto.DataStatus;
+import com.techouts.hp.dto.Polt;
+import com.techouts.hp.pojo.FileSupport;
+
+@Service
+public class PoltService
+{
+	static final Logger LOGGER = Logger.getLogger(PoltService.class);
+	@Resource(name = "myProps")
+	private Properties properties;
+	@Autowired
+	private ExcelService excelService;
+	@Autowired
+	private CsvExcelDao csvExcelDao;
+    private static final String SUPPLIER="Supplier";
+    private static final String PO="PO";
+    private static final String LINE="Line";
+    private static final String PO_LINE="PO/Line";
+    private static final String PODATE="PODate";
+    private static final String PO_DATE="PO Date";
+    private static final String ITEM="Item";
+    private static final String RECEIPTDATE="ReceiptDate";
+    private static final String RECEIPT_DATE="Receipt Date";
+    private static final String QTY="Qty";
+    private static final SimpleDateFormat EXISTED_FORMATE = new SimpleDateFormat("MM/dd/yyyy");
+	private static final SimpleDateFormat REQ_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+	private static final List<String> POLT_HEADER = Arrays.asList("Supplier", "PO", "Line", "PO/Line", "PODate", "PO Date", "Item", "ReceiptDate", "Receipt Date", "Qty");
+	public boolean readDataFromFile(File inputLocation,FileSupport fileSupport) throws Exception
+	{
+		boolean fileUploadStatus=false;
+		Workbook wb = null;
+		try
+		{
+			if (fileSupport.getFtpFile().getName().endsWith("xlsx") || fileSupport.getFtpFile().getName().endsWith("xlsm"))
+			{
+				wb = new XSSFWorkbook(new FileInputStream(inputLocation + File.separator + fileSupport.getFtpFile().getName()));
+			}
+			if (fileSupport.getFtpFile().getName().endsWith("xls"))
+			{
+				wb = new HSSFWorkbook(new FileInputStream(inputLocation + File.separator + fileSupport.getFtpFile().getName()));
+			}
+			if (!fileSupport.getFtpFile().getName().contains("Printers"))
+			{
+				List<String> loadedSheetList=null;
+				//loadedSheetList = csvExcelDao.getDistinctSheetNamesOfPoltPc(file.getName());
+				loadedSheetList=csvExcelDao.getDistinctSheetNames();
+				for (int i = 0; i < wb.getNumberOfSheets(); i++)
+				{
+					List<Polt> poltList = new ArrayList<Polt>();
+					Sheet sheet = wb.getSheetAt(i);
+					if (!loadedSheetList.contains(wb.getSheetAt(i).getSheetName()))
+					{
+						boolean headerFound=false;
+						Map<Integer, String> poltColumnAndIndexMap = null;
+						String pcSheetMaxDate = null;
+						Row row;
+						for (int rowCount = 0; rowCount <=sheet.getLastRowNum(); rowCount++)
+						{
+							boolean insertRow=true;
+							row = sheet.getRow(rowCount);
+							if (findEmptyRow(row))
+							{
+                            
+							} 
+							else if (!headerFound)
+							{
+							poltColumnAndIndexMap=null;
+							poltColumnAndIndexMap = getSheetheaders(row);
+							if(poltColumnAndIndexMap.size()>=POLT_HEADER.size()/2)
+							{
+								headerFound=true;
+								pcSheetMaxDate=EXISTED_FORMATE.format(getHighestDate(sheet,poltColumnAndIndexMap,rowCount));
+							}
+							} else
+							{
+								if (poltColumnAndIndexMap != null && poltColumnAndIndexMap.size()>POLT_HEADER.size()/2)
+								{
+									Polt poltPojo = new Polt();
+									poltPojo.setSheetName(wb.getSheetAt(i).getSheetName());
+									for (Entry<Integer, String> entry : poltColumnAndIndexMap.entrySet())
+									{
+										String cellValue = excelService.getCellData((row.getCell(entry.getKey())));
+										if (entry.getValue().equalsIgnoreCase(SUPPLIER))
+										{
+											poltPojo.setSupplier(cellValue);
+										} else if (entry.getValue().equals(PO))
+										{
+											poltPojo.setPo(cellValue);
+										} else if (entry.getValue().equalsIgnoreCase(LINE))
+										{
+											poltPojo.setLine(cellValue);
+										}
+
+										else if (entry.getValue().equalsIgnoreCase(PO_LINE))
+										{
+											poltPojo.setPoline(cellValue);
+										}
+
+										else if (entry.getValue().equalsIgnoreCase(PODATE) || entry.getValue().equals(PO_DATE))
+										{
+											String poDate = cellValue;
+											poltPojo.setPodate(poDate);
+											if (!StringUtils.isEmpty(poDate))
+											{
+													poDate = poDate.replaceAll(",", "").trim();
+													if (poDate.matches("^[0-9/]*$*"))
+													{
+														poltPojo.setNewPODate(new Date(REQ_DATE_FORMAT.parse(
+																REQ_DATE_FORMAT.format(EXISTED_FORMATE.parse(poDate))).getTime()));
+													}
+											}
+										}
+
+										else if (entry.getValue().equalsIgnoreCase(ITEM))
+										{
+											if(!StringUtils.isEmpty(cellValue))
+											{
+												poltPojo.setItem(cellValue);
+											}
+											else 
+											{
+												insertRow=false;	
+												break;
+											}
+											
+										}
+										else if (entry.getValue().equalsIgnoreCase(RECEIPTDATE) || entry.getValue().equals(RECEIPT_DATE))
+										{
+											String receiptDate = cellValue;
+											poltPojo.setReceiptDate(cellValue);
+											if (!StringUtils.isEmpty(receiptDate))
+											{
+													receiptDate = receiptDate.replaceAll(",", "").trim();
+													if (receiptDate.matches("^[0-9/]*$*"))
+													{
+														poltPojo.setNewConfirmedDelivery(new Date(REQ_DATE_FORMAT.parse(
+																REQ_DATE_FORMAT.format(EXISTED_FORMATE.parse(receiptDate))).getTime()));
+													}
+												
+											}
+
+										}
+
+										else if (entry.getValue().equalsIgnoreCase(QTY))
+										{
+											poltPojo.setQty(cellValue);
+										}
+
+										poltPojo.setBu("Pc");
+										poltPojo.setFileDate(pcSheetMaxDate);
+										if (!StringUtils.isEmpty(pcSheetMaxDate))
+										{
+												pcSheetMaxDate = pcSheetMaxDate.replaceAll(",", "").trim();
+												if (pcSheetMaxDate.matches("^[0-9/]*$*"))
+												{
+													poltPojo.setNewFileDate(new Date(REQ_DATE_FORMAT.parse(
+															REQ_DATE_FORMAT.format(EXISTED_FORMATE.parse(pcSheetMaxDate))).getTime()));
+												}
+											
+										}
+
+									}
+									if(insertRow)
+									{
+									poltList.add(poltPojo);
+									}
+								}
+
+							}
+						}
+
+						try
+						{
+							if (poltList.size() > 0)
+							{
+								if (csvExcelDao.insertFileData(poltList))
+								{
+									fileUploadStatus=true;
+									LOGGER.info(poltList.size() + "s record of sheet name " + wb.getSheetAt(i).getSheetName() + " inserted sucessfully");
+									DataStatus dataStatus = new DataStatus();
+									dataStatus.setFolderName(fileSupport.getSubDirectory());
+									dataStatus.setFileType("Pc");
+									dataStatus.setSheetName(wb.getSheetAt(i).getSheetName());
+									dataStatus.setFileName(fileSupport.getFtpFile().getName());
+									dataStatus.setFileUploadStatus(true);
+									dataStatus.setNoOfRecords(poltList.size());
+									dataStatus.setFileReceiveDate(fileSupport.getFtpFile().getTimestamp().getTime());
+									csvExcelDao.saveFileInfo(dataStatus);
+
+								}
+							} else
+							{
+								LOGGER.info("no records found");
+							}
+						} catch (Exception exception)
+						{
+							exception.printStackTrace();
+						}
+					} else
+					{
+						LOGGER.info(wb.getSheetAt(i).getSheetName() + " sheeet  loaded alredy");
+					}
+				}
+			} else
+			{
+				for (int i = 0; i < wb.getNumberOfSheets(); i++)
+				{
+					int lastRowNumber=0;
+					int lastRecordedRowNumber = 0;
+					boolean headerFound=false;
+					List<Polt> poltList = new ArrayList<Polt>();
+					Sheet sheet = wb.getSheetAt(i);
+					lastRecordedRowNumber = csvExcelDao.getLastRecordedRowNumberOFPoltPrinter();
+					LOGGER.info("last uploaded record row number " + lastRecordedRowNumber);
+					Row row;
+					Map<Integer, String> poltColumnAndIndexMap = null;
+					for (int rowCount = 0; rowCount <= sheet.getLastRowNum();)
+					{
+						boolean insertRow=true;
+						row = sheet.getRow(rowCount);
+						if (findEmptyRow(row))
+						{
+							if(headerFound)
+							{
+								if(lastRecordedRowNumber==0)
+								{
+									++rowCount;
+								}
+								else
+								{
+									rowCount = ++lastRecordedRowNumber;
+								}
+							}
+							else
+							{
+								++rowCount;
+							}
+							
+						}
+						else if (!headerFound)
+						{
+						poltColumnAndIndexMap=null;
+						poltColumnAndIndexMap = getSheetheaders(row);
+						if(poltColumnAndIndexMap.size()>=POLT_HEADER.size()/2)
+						{
+							headerFound=true;
+						}
+						if (lastRecordedRowNumber == 0)
+						{
+							++rowCount;
+						}
+						if(lastRecordedRowNumber>0)
+						{
+							rowCount = ++lastRecordedRowNumber;
+						}
+						} else
+						{
+							if (poltColumnAndIndexMap != null && poltColumnAndIndexMap.size()>=POLT_HEADER.size()/2)
+							{
+								Polt poltPojo = new Polt();
+								poltPojo.setRowNumber(rowCount);
+								for (Entry<Integer, String> entry : poltColumnAndIndexMap.entrySet())
+								{
+									String cellValue = excelService.getCellData((row.getCell(entry.getKey())));
+									if (entry.getValue().equals(SUPPLIER))
+									{
+										poltPojo.setSupplier(cellValue);
+									} else if (entry.getValue().equals(PO))
+									{
+										poltPojo.setPo(cellValue);
+									} else if (entry.getValue().equals(LINE))
+									{
+										poltPojo.setLine(cellValue);
+									}
+
+									else if (entry.getValue().equals(PO_LINE))
+									{
+										poltPojo.setPoline(cellValue);
+									}
+
+									else if (entry.getValue().equals(PODATE) || entry.getValue().equals(PO_DATE))
+									{
+										String poDate = cellValue;
+										poltPojo.setPodate(poDate);
+										if (!StringUtils.isEmpty(poDate))
+										{
+												poDate = poDate.replaceAll(",", "").trim();
+												if (poDate.matches("^[0-9/]*$*"))
+												{
+													poltPojo.setNewPODate(new Date(REQ_DATE_FORMAT.parse(
+															REQ_DATE_FORMAT.format(EXISTED_FORMATE.parse(poDate))).getTime()));
+												}
+										}
+									}
+
+									else if (entry.getValue().equals(ITEM))
+									{
+										if(!StringUtils.isEmpty(cellValue))
+										{
+											poltPojo.setItem(cellValue);
+										}
+										else 
+										{
+											insertRow=false;	
+											break;
+										}
+
+									}
+
+									else if (entry.getValue().equals(RECEIPTDATE) || entry.getValue().equals(RECEIPT_DATE))
+									{
+										poltPojo.setReceiptDate(cellValue);
+										poltPojo.setFileDate(cellValue);
+										String receiptDate = cellValue;
+										if (!StringUtils.isEmpty(receiptDate))
+										{
+												receiptDate = receiptDate.replaceAll(",", "").trim();
+												if (receiptDate.matches("^[0-9/]*$*"))
+												{
+													poltPojo.setNewConfirmedDelivery(new Date(REQ_DATE_FORMAT.parse(
+															REQ_DATE_FORMAT.format(EXISTED_FORMATE.parse(receiptDate))).getTime()));
+													poltPojo.setNewFileDate(new Date(REQ_DATE_FORMAT.parse(
+															REQ_DATE_FORMAT.format(EXISTED_FORMATE.parse(receiptDate))).getTime()));
+												}
+										}
+									}
+
+									else if (entry.getValue().equals(QTY))
+									{
+										poltPojo.setQty(cellValue);
+									}
+									poltPojo.setBu("Print");
+								}
+								if(insertRow)
+								{
+								poltList.add(poltPojo);
+								lastRowNumber=rowCount;
+								}
+							}
+							if (lastRecordedRowNumber == 0)
+							{
+								++rowCount;
+							}
+							else
+							{
+								rowCount = ++lastRecordedRowNumber;
+							}
+							
+						}
+
+					}
+
+					try
+					{
+						if (poltList.size() > 0)
+						{
+							if (csvExcelDao.insertFileData(poltList))
+							{
+								fileUploadStatus=true;
+								LOGGER.info(poltList.size() + " new records inserted ");
+								DataStatus dataStatus = new DataStatus();
+								dataStatus.setFolderName(fileSupport.getSubDirectory());
+								dataStatus.setLastLodedRowNumber(lastRowNumber);
+								dataStatus.setFileType("Print");
+								dataStatus.setFileName(fileSupport.getFtpFile().getName());
+								dataStatus.setFileUploadStatus(true);
+								dataStatus.setNoOfRecords(poltList.size());
+								dataStatus.setFileReceiveDate(fileSupport.getFtpFile().getTimestamp().getTime());
+								csvExcelDao.saveFileInfo(dataStatus);
+							}
+						} else
+						{
+							LOGGER.info("No records found today");
+						}
+					} catch (Exception exception)
+					{
+						exception.printStackTrace();
+					}
+				}
+
+			}
+		} catch (Exception e)
+		{
+			e.printStackTrace();
+			LOGGER.error("exception " + e.getMessage());
+		} finally
+		{
+
+		}
+return fileUploadStatus;
+	}
+
+	/**
+	 * method for putting column name and index in Linked hash map
+	 * 
+	 * @param row
+	 * @return
+	 */
+	public Map<Integer, String> getSheetheaders(Row row)
+	{
+		Map<Integer, String> headerMap = new LinkedHashMap<Integer, String>();
+		for (int i = 0; i < row.getLastCellNum(); i++)
+		{
+			Cell cell = row.getCell(i);
+			if (cell != null)
+			{
+				String columnName = excelService.getCellData(cell);
+				if(columnName!=null)
+				{
+					if(POLT_HEADER.contains(columnName))
+					{
+					if(!headerMap.containsValue(columnName))
+					{
+						headerMap.put(cell.getColumnIndex(), columnName);
+					}
+					}
+				}
+			}
+		}
+		return headerMap;
+	}
+
+	/**
+	 * to get highest file date from received column
+	 * 
+	 * @param sheet
+	 * @return highest date
+	 * @throws ParseException
+	 */
+	public java.util.Date getHighestDate(Sheet sheet,Map<Integer,String> headers,int rowCount) throws ParseException
+	{
+		List<java.util.Date> list = new ArrayList<java.util.Date>();
+		try
+		{
+			rowCount=rowCount+1;
+			for (int i = rowCount; i <= sheet.getLastRowNum(); i++)
+			{
+				Row row = sheet.getRow(i);
+				for(Entry<Integer, String> headerValue:headers.entrySet())
+				{
+					if(headerValue.getValue().equals("ReceiptDate") || headerValue.getValue().equals("Receipt Date"))
+					{
+						list.add(getDate(row.getCell(headerValue.getKey())));
+						break;
+					}
+				}
+			}
+			if (list.contains(null))
+			{
+				list.removeAll(Collections.singleton(null));
+			}
+		} catch (Exception e)
+		{
+			LOGGER.error(e.getMessage());
+		}
+		return Collections.max(list);
+	}
+
+	/**
+	 * to get date
+	 * 
+	 * @param cell
+	 * @return date
+	 * @throws ParseException
+	 */
+	public java.util.Date getDate(Cell cell)
+	{
+		SimpleDateFormat requiredDateFormat = new SimpleDateFormat("MM/dd/yyyy");
+		SimpleDateFormat existedFormat = new SimpleDateFormat("dd/MM/yyyy");
+		java.util.Date cellDate = null;
+		try
+		{
+			if (cell != null)
+			{
+				switch (cell.getCellType())
+				{
+				case Cell.CELL_TYPE_FORMULA:
+					switch (cell.getCachedFormulaResultType())
+					{
+					case Cell.CELL_TYPE_NUMERIC:
+						if (DateUtil.isCellDateFormatted(cell))
+						{
+							cellDate = requiredDateFormat.parse((requiredDateFormat.format((cell.getDateCellValue()))));
+
+						} else
+						{
+							cellDate = requiredDateFormat.parse((requiredDateFormat.format(existedFormat.parse(cell.getStringCellValue()))));
+						}
+						break;
+					case Cell.CELL_TYPE_STRING:
+						cellDate = requiredDateFormat.parse((requiredDateFormat.format(existedFormat.parse(cell.getStringCellValue()))));
+						break;
+					}
+					break;
+				case Cell.CELL_TYPE_NUMERIC:
+					if (DateUtil.isCellDateFormatted(cell))
+					{
+						cellDate = requiredDateFormat.parse((requiredDateFormat.format((cell.getDateCellValue()))));
+					} else
+					{
+						cellDate = requiredDateFormat.parse((requiredDateFormat.format(existedFormat.parse(cell.getStringCellValue()))));
+					}
+					break;
+				case Cell.CELL_TYPE_STRING:
+					cellDate = requiredDateFormat.parse((requiredDateFormat.format(existedFormat.parse(cell.getStringCellValue()))));
+					break;
+				}
+
+			}
+		} catch (Exception e)
+		{
+			LOGGER.error("exception " + e.getMessage());
+		}
+		return cellDate;
+	}
+	public boolean findEmptyRow(Row row)
+	{
+		boolean emptyRow=false;
+		for(int i=0; i<row.getLastCellNum(); i++) 
+		{
+			if(row.getCell(i, Row.RETURN_BLANK_AS_NULL)==null)
+			{
+				emptyRow=true;
+				continue;
+			}
+			else
+			{
+				emptyRow=false;
+				break;
+			}
+		}
+		return emptyRow;
+	}
+}

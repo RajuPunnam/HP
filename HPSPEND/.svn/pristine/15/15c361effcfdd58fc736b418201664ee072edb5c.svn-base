@@ -1,0 +1,134 @@
+package com.techouts.hp.dto;
+
+import java.sql.Date;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+
+@Entity
+@Table(name="pcinvoices")
+@Access(value=AccessType.FIELD)
+public class PcShipmentsToHp 
+{
+	@Id
+	@GenericGenerator(name="kaugen" , strategy="increment")
+	@GeneratedValue(generator="kaugen")
+	@Column(name="ID",unique = true, nullable = false)
+	private int id1;
+	@Column(name="File_Date",columnDefinition="DATE")
+	private Date fileDate;
+	@Column(name="File_Name")
+	private String fileName;
+	@Column(name="Date")
+	private String date;
+	@Column(name="SKU")
+	private String SKU;
+	@Column(name="PLs")
+	private String PLs;
+	@Column(name="Po")
+	private String Po;
+	@Column(name="Qty")
+	private String Shipped;
+	@Column(name="NFiscal")
+	private String NFiscal;
+	@Column(name="InvoiceDate",columnDefinition="DATE")
+	private Date InvoiceDate;
+	@Column(name="InvoiceQty")
+	private float InvoiceQty;
+	public int getId1()
+	{
+		return id1;
+	}
+	public void setId1(int id1)
+	{
+		this.id1 = id1;
+	}
+
+	public String getDate()
+	{
+		return date;
+	}
+	public void setDate(String date)
+	{
+		this.date = date;
+	}
+	public String getSKU()
+	{
+		return SKU;
+	}
+	public void setSKU(String sKU)
+	{
+		SKU = sKU;
+	}
+	public String getPLs()
+	{
+		return PLs;
+	}
+	public void setPLs(String pLs)
+	{
+		PLs = pLs;
+	}
+	public String getPo()
+	{
+		return Po;
+	}
+	public void setPo(String po)
+	{
+		Po = po;
+	}
+	public String getShipped()
+	{
+		return Shipped;
+	}
+	public void setShipped(String shipped)
+	{
+		Shipped = shipped;
+	}
+	public String getNFiscal()
+	{
+		return NFiscal;
+	}
+	public void setNFiscal(String nFiscal)
+	{
+		NFiscal = nFiscal;
+	}
+	public Date getInvoiceDate()
+	{
+		return InvoiceDate;
+	}
+	public void setInvoiceDate(Date invoiceDate)
+	{
+		InvoiceDate = invoiceDate;
+	}
+	public float getInvoiceQty()
+	{
+		return InvoiceQty;
+	}
+	public void setInvoiceQty(float invoiceQty)
+	{
+		InvoiceQty = invoiceQty;
+	}
+	public String getFileName() {
+		return fileName;
+	}
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+	public Date getFileDate() {
+		return fileDate;
+	}
+	public void setFileDate(Date fileDate) {
+		this.fileDate = fileDate;
+	}
+	
+
+
+	
+}

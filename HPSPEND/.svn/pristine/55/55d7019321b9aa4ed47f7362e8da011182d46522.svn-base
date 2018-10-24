@@ -1,0 +1,57 @@
+package com.techouts.hp.util;
+
+import java.util.Properties;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+
+@Component
+public class OS {
+	private static final Logger LOGGER=Logger.getLogger(OS.class);
+	@Resource(name = "myProps")
+	private Properties prop;
+	private String dowloadPath = null;
+	private static final String WINDOWS = "windows";
+	private static final String LINUX = "linux";
+	private static final String MAC = "mac";
+	private static final String SOLARIS = "solaris";
+
+	enum OSTypes {
+		windows, linux,mac,solaris
+	}
+
+	@PostConstruct
+	public void init() {
+		if (findOs().equals(OSTypes.windows)) {
+			dowloadPath = prop.getProperty("drive.name");
+		} else if (findOs().equals(OSTypes.linux)) {
+			dowloadPath = prop.getProperty("linux.os.name.drive");
+		}
+		LOGGER.info("os download directory "+dowloadPath);
+	}
+
+	public OSTypes findOs() {
+		String operSys = System.getProperty("os.name").toLowerCase();
+		if (operSys.contains("win")) {
+			return OSTypes.windows;
+		} else if (operSys.contains("nix") || operSys.contains("nux")
+				|| operSys.contains("aix")) {
+
+			return OSTypes.linux;
+		} else if (operSys.contains("mac")) {
+
+			return OSTypes.mac;
+		} else if (operSys.contains("sunos")) {
+
+			return OSTypes.solaris;
+		}
+		return null;
+	}
+
+	public String getDownloadLocation() {
+		return dowloadPath;
+	}
+}

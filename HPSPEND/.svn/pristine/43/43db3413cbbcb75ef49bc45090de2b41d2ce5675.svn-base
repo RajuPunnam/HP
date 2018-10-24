@@ -1,0 +1,56 @@
+package com.techouts.hp.thread;
+
+import java.util.Properties;
+
+import javax.annotation.Resource;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.techouts.hp.pojo.FtpSupport;
+import com.techouts.hp.service.FtpService;
+import com.techouts.hp.util.OS;
+/**
+ * 
+ * @author raju.p
+ *
+ */
+@Component
+public class PPBWorkerThread extends Thread {
+	private static final Logger LOGGER = Logger.getLogger(PPBWorkerThread.class);
+	@Autowired
+	private FtpService ftpService;
+	@Autowired
+	OS os;
+	@Resource(name = "myProps")
+	private Properties prop;
+	private boolean methodCompleted;
+
+	@Override
+	public synchronized void run() {
+		FtpSupport ppbpcSupport = new FtpSupport();
+		ppbpcSupport
+				.setFileDate(prop.getProperty("consumption.static.pc.date"));
+		ppbpcSupport.setDownloadDir(os.getDownloadLocation());
+		ppbpcSupport
+				.setSubFolder(prop.getProperty("sub.folder.pc.consumption"));
+		ppbpcSupport.setFtpServer(prop.getProperty("ftp.flectronics.server"));
+		ppbpcSupport.setFtpUserName(prop.getProperty("ftp.flectronics.userId"));
+		ppbpcSupport.setFtpPassword(prop
+				.getProperty("ftp.flectronics.password"));
+		try {
+			ftpService.getDownloadPrinterFiles(ppbpcSupport, 0);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+		}
+		methodCompleted = true;
+		LOGGER.info("PPB worker thread completed.");
+
+	}
+
+	public boolean getConsumptionPcDownloadMethodCompleationStatus() {
+		return methodCompleted;
+	}
+
+}

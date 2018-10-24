@@ -1,0 +1,80 @@
+package com.techouts.hp.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import com.techouts.hp.service.MailService;
+import com.techouts.hp.service.StatusService;
+import com.techouts.hp.thread.PcShipmentsToHpWorkerThread;
+import com.techouts.hp.thread.POLTWorkerThread;
+import com.techouts.hp.thread.PPBWorkerThread;
+import com.techouts.hp.thread.PrintShipmentsWorkerThread;
+
+
+/**
+ * AbstractDataprocessController handles all worker theread objects 
+ * @author raju
+ *
+ */
+class AbstractDataprocessController 
+{
+	@Autowired
+	private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+	@Autowired
+	private POLTWorkerThread poltWorkerThread;
+	@Autowired
+	private PrintShipmentsWorkerThread printShipmentsWorkerThread;
+	@Autowired
+	private PcShipmentsToHpWorkerThread pcShipmentsToHpWorkerThread;
+	@Autowired
+	private PPBWorkerThread ppbPcWorker;
+	@Autowired
+	private MailService mailserivice;
+	@Autowired
+	private StatusService statusService;
+	public ThreadPoolTaskExecutor getThreadPoolTaskExecutor() {
+		return threadPoolTaskExecutor;
+	}
+	public void setThreadPoolTaskExecutor(
+			ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+		this.threadPoolTaskExecutor = threadPoolTaskExecutor;
+	}
+	public POLTWorkerThread getPoltWorkerThread() {
+		return poltWorkerThread;
+	}
+	public void setPoltWorkerThread(POLTWorkerThread poltWorkerThread) {
+		this.poltWorkerThread = poltWorkerThread;
+	}
+	public PrintShipmentsWorkerThread getPrintShipmentsWorkerThread() {
+		return printShipmentsWorkerThread;
+	}
+	public void setPrintShipmentsWorkerThread(
+			PrintShipmentsWorkerThread printShipmentsWorkerThread) {
+		this.printShipmentsWorkerThread = printShipmentsWorkerThread;
+	}
+	public PcShipmentsToHpWorkerThread getPcShipmentsToHpWorkerThread() {
+		return pcShipmentsToHpWorkerThread;
+	}
+	public void setPcShipmentsToHpWorkerThread(
+			PcShipmentsToHpWorkerThread pcShipmentsToHpWorkerThread) {
+		this.pcShipmentsToHpWorkerThread = pcShipmentsToHpWorkerThread;
+	}
+	public PPBWorkerThread getPpbPcWorker() {
+		return ppbPcWorker;
+	}
+	public void setPpbPcWorker(PPBWorkerThread ppbPcWorker) {
+		this.ppbPcWorker = ppbPcWorker;
+	}
+	public MailService getMailserivice() {
+		return mailserivice;
+	}
+	public void setMailserivice(MailService mailserivice) {
+		this.mailserivice = mailserivice;
+	}
+	public StatusService getStatusService() {
+		return statusService;
+	}
+	public void setStatusService(StatusService statusService) {
+		this.statusService = statusService;
+	}
+}

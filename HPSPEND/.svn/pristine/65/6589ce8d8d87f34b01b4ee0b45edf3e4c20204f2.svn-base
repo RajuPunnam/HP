@@ -1,0 +1,74 @@
+package com.techouts.hp.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import com.techouts.hp.service.MailService;
+import com.techouts.hp.service.StatusService;
+import com.techouts.hp.thread.PcShipmentsToHpWorkerThread;
+import com.techouts.hp.thread.PoltWorkerThread;
+import com.techouts.hp.thread.PpbPcWorker;
+import com.techouts.hp.thread.PrintShipmentsWorkerThread;
+
+class AbstractDataprocessController 
+{
+	@Autowired
+	private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+	@Autowired
+	private PoltWorkerThread poltWorkerThread;
+	@Autowired
+	private PrintShipmentsWorkerThread printShipmentsWorkerThread;
+	@Autowired
+	private PcShipmentsToHpWorkerThread pcShipmentsToHpWorkerThread;
+	@Autowired
+	private PpbPcWorker ppbPcWorker;
+	@Autowired
+	private MailService mailserivice;
+	@Autowired
+	private StatusService statusService;
+	public ThreadPoolTaskExecutor getThreadPoolTaskExecutor() {
+		return threadPoolTaskExecutor;
+	}
+	public void setThreadPoolTaskExecutor(
+			ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+		this.threadPoolTaskExecutor = threadPoolTaskExecutor;
+	}
+	public PoltWorkerThread getPoltWorkerThread() {
+		return poltWorkerThread;
+	}
+	public void setPoltWorkerThread(PoltWorkerThread poltWorkerThread) {
+		this.poltWorkerThread = poltWorkerThread;
+	}
+	public PrintShipmentsWorkerThread getPrintShipmentsWorkerThread() {
+		return printShipmentsWorkerThread;
+	}
+	public void setPrintShipmentsWorkerThread(
+			PrintShipmentsWorkerThread printShipmentsWorkerThread) {
+		this.printShipmentsWorkerThread = printShipmentsWorkerThread;
+	}
+	public PcShipmentsToHpWorkerThread getPcShipmentsToHpWorkerThread() {
+		return pcShipmentsToHpWorkerThread;
+	}
+	public void setPcShipmentsToHpWorkerThread(
+			PcShipmentsToHpWorkerThread pcShipmentsToHpWorkerThread) {
+		this.pcShipmentsToHpWorkerThread = pcShipmentsToHpWorkerThread;
+	}
+	public PpbPcWorker getPpbPcWorker() {
+		return ppbPcWorker;
+	}
+	public void setPpbPcWorker(PpbPcWorker ppbPcWorker) {
+		this.ppbPcWorker = ppbPcWorker;
+	}
+	public MailService getMailserivice() {
+		return mailserivice;
+	}
+	public void setMailserivice(MailService mailserivice) {
+		this.mailserivice = mailserivice;
+	}
+	public StatusService getStatusService() {
+		return statusService;
+	}
+	public void setStatusService(StatusService statusService) {
+		this.statusService = statusService;
+	}
+}
