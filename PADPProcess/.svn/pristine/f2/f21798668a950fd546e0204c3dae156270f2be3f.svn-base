@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:sec="http://www.springframework.org/schema/security"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	                  http://www.springframework.org/schema/beans/spring-beans.xsd
+                      http://www.springframework.org/schema/context 
+                      http://www.springframework.org/schema/context/spring-context-4.0.xsd
+                      http://www.springframework.org/schema/security
+                      http://www.springframework.org/schema/security/spring-security-3.1.xsd
+                      http://www.springframework.org/schema/mvc
+                      http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+                      http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.5.xsd">
+
+	
+	<mvc:annotation-driven></mvc:annotation-driven>
+	<mvc:default-servlet-handler/>
+	<context:component-scan base-package="com.techouts" />
+	<context:property-placeholder properties-ref="myProps"/>
+	<bean id="myProps" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+    <property name="location" value="classpath:config.properties"/>
+    </bean>
+    <!-- staging database -->
+	<mongo:mongo host="localhost" port="27017" id="stagmongo" >
+	<mongo:options connections-per-host="1" threads-allowed-to-block-for-connection-multiplier="200"/>
+	</mongo:mongo>
+	<mongo:db-factory dbname="HPCPSTG" mongo-ref="stagmongo" id="mongoStagingDbFactory" />
+
+	<bean id="stagingMongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate" >
+		<constructor-arg name="mongoDbFactory" ref="mongoStagingDbFactory" />
+	</bean>
+ 
+<!-- production database -->
+ 	<mongo:mongo host="localhost" port="27017" id="procmongo" />
+	<mongo:db-factory dbname="HPCPPROD" mongo-ref="procmongo" id="mongoProductionDbFactory" />
+
+
+	<bean id="productionMongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate" >
+		<constructor-arg name="mongoDbFactory" ref="mongoProductionDbFactory" />
+	</bean>
+	
+	<bean  class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+</bean> 
+</beans>

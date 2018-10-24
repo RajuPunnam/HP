@@ -1,0 +1,210 @@
+package com.techouts.service;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.techouts.dao.DataMoveDao;
+import com.techouts.dto.PipelineAvAvil;
+import com.techouts.pojo.AvAvbail;
+import com.techouts.pojo.AvPartFinalQtyPer;
+import com.techouts.pojo.BUFamilyAvailability;
+import com.techouts.pojo.BomStatus;
+import com.techouts.pojo.DOInventory;
+import com.techouts.pojo.OpenOrderPipeLine;
+import com.techouts.pojo.OpenOrders;
+import com.techouts.pojo.OverAllSkusAvailability;
+import com.techouts.pojo.PNLT;
+import com.techouts.pojo.SkuBom;
+import com.techouts.pojo.SkuSimilarityMatrix;
+
+@Service
+public class DataMoveService {
+	@Autowired
+	private DataMoveDao dataMoveDao;
+
+	public synchronized Map<String, String> moveProceessCollectionDataToProduction() 
+	{
+		List<DOInventory> doi1_1List = null;
+		List<OpenOrders> openOrdersLatestList = null;
+		List<AvAvbail> avAvilableList = null;
+		List<OverAllSkusAvailability> overAllSkusAvailabilityList = null;
+		List<OverAllSkusAvailability> overallSkuConfigLIst = null;
+		List<SkuSimilarityMatrix> skuSimilarityMatrixList = null;
+		List<BUFamilyAvailability> BUFamilyAvailabilityList = null;
+		List<PipelineAvAvil> pipelineAvAvilList = null;
+		List<OpenOrderPipeLine> ordersPipeLineList = null;
+		List<AvPartFinalQtyPer> AvPartFinalQtyPerList = null;
+		List<PNLT> PNLTList = null;
+		List<SkuBom> paFlexsuperBomList=null;
+		Map<Class,String> replicaMap=new HashMap<Class, String>();
+		replicaMap.put(DOInventory.class, "DOI_1.1"+"/"+doi1_1List);
+		replicaMap.put(OpenOrders.class, "NEWOPNORDERS_LATEST"+"/"+openOrdersLatestList);
+		replicaMap.put(AvAvbail.class, "AVAVBAIL"+"/"+avAvilableList);
+		replicaMap.put(OverAllSkusAvailability.class, "All_Skus_Availability"+"/"+overAllSkusAvailabilityList);
+		replicaMap.put(OverAllSkusAvailability.class, "All_Sku_Configs_Availability"+"/"+overallSkuConfigLIst);
+		replicaMap.put(SkuSimilarityMatrix.class, "SKu_Similarity_Matrix"+"/"+skuSimilarityMatrixList);
+		replicaMap.put(BUFamilyAvailability.class, "BUFamilyAvailability"+"/"+BUFamilyAvailabilityList);
+		replicaMap.put(PipelineAvAvil.class, "PipeLineAvAvbail"+"/"+pipelineAvAvilList);
+		replicaMap.put(OpenOrderPipeLine.class, "OrdersPipeLine"+"/"+ordersPipeLineList);
+		replicaMap.put(AvPartFinalQtyPer.class, "PA_AvPartFinalQtyPer"+"/"+AvPartFinalQtyPerList);
+		replicaMap.put(PNLT.class, "PN_LT"+"/"+PNLTList);
+		replicaMap.put(SkuBom.class, "PA_FLEX_SUPER_BOM"+"/"+paFlexsuperBomList);
+		Map<String, String> replicationStatusMap = new LinkedHashMap<String, String>();
+		
+		for(java.util.Map.Entry<Class, String> replica:replicaMap.entrySet())
+		{
+			boolean status=dataMoveDao.replicateCollectionFromStagToProd(replica.getValue().split("/")[0],Arrays.asList(replica.getValue().split("/")[1]) , replica.getKey());
+			if (status) 
+			{
+				replicationStatusMap.put(replica.getValue().split("/")[0], "SUCESS");
+			} else 
+			{
+				replicationStatusMap.put(replica.getValue().split("/")[0], "FAILURE");
+		    }
+		}
+		
+		boolean pipelineDoiStatus = dataMoveDao.replicatePipelineDoi();
+		if (pipelineDoiStatus) 
+		{
+			replicationStatusMap.put("PipeLineDOI", "SUCESS");
+		} else 
+		{
+			replicationStatusMap.put("PipeLineDOI", "FAILURE");
+		}
+		
+/*		boolean doi1_1Status = dataMoveDao.replicateCollectionFromStagToProd(
+				"DOI_1.1", doi1_1List, DOInventory.class);
+		if (doi1_1Status) {
+			replicationStatusMap.put("DOI_1.1", "SUCESS");
+		} else {
+			replicationStatusMap.put("DOI_1.1", "FAILURE");
+		}
+		boolean new_openOrderLateststatus = dataMoveDao
+				.replicateCollectionFromStagToProd("NEWOPNORDERS_LATEST",
+						openOrdersLatestList, OpenOrders.class);
+		if (new_openOrderLateststatus) {
+			replicationStatusMap.put("NEWOPNORDERS_LATEST", "SUCESS");
+		} else {
+			replicationStatusMap.put("NEWOPNORDERS_LATEST", "FAILURE");
+		}
+		boolean avavbailStatus = dataMoveDao.replicateCollectionFromStagToProd(
+				"AVAVBAIL", avAvilableList, AvAvbail.class);
+
+		if (avavbailStatus) {
+			replicationStatusMap.put("AVAVBAIL", "SUCESS");
+		} else {
+			replicationStatusMap.put("AVAVBAIL", "FAILURE");
+		}
+		boolean allskuAvilStatus = dataMoveDao
+				.replicateCollectionFromStagToProd("All_Skus_Availability",
+						overAllSkusAvailabilityList,
+						OverAllSkusAvailability.class);
+		if (allskuAvilStatus) {
+			replicationStatusMap.put("All_Skus_Availability", "SUCESS");
+		} else {
+			replicationStatusMap.put("All_Skus_Availability", "FAILURE");
+		}
+		boolean allSkuConfigStatus = dataMoveDao
+				.replicateCollectionFromStagToProd(
+						"All_Sku_Configs_Availability", overallSkuConfigLIst,
+						OverAllSkusAvailability.class);
+		if (allSkuConfigStatus) {
+			replicationStatusMap.put("All_Sku_Configs_Availability", "SUCESS");
+		} else {
+			replicationStatusMap.put("All_Sku_Configs_Availability", "FAILURE");
+		}
+		boolean skuSimilarityStatus = dataMoveDao
+				.replicateCollectionFromStagToProd("SKu_Similarity_Matrix",
+						skuSimilarityMatrixList, SkuSimilarityMatrix.class);
+		if (skuSimilarityStatus) {
+			replicationStatusMap.put("SKu_Similarity_Matrix", "SUCESS");
+		} else {
+			replicationStatusMap.put("SKu_Similarity_Matrix", "FAILURE");
+		}
+		boolean bufamilyAvilStatus = dataMoveDao
+				.replicateCollectionFromStagToProd("BUFamilyAvailability",
+						BUFamilyAvailabilityList, BUFamilyAvailability.class);
+		if (bufamilyAvilStatus) {
+			replicationStatusMap.put("BUFamilyAvailability", "SUCESS");
+		} else {
+			replicationStatusMap.put("BUFamilyAvailability", "FAILURE");
+		}
+		boolean pipelineAvavilStatus = dataMoveDao
+				.replicateCollectionFromStagToProd("PipeLineAvAvbail",
+						pipelineAvAvilList, PipelineAvAvil.class);
+		if (pipelineAvavilStatus) {
+			replicationStatusMap.put("PipeLineAvAvbail", "SUCESS");
+		} else {
+			replicationStatusMap.put("PipeLineAvAvbail", "FAILURE");
+		}
+		boolean orderPipeLineStatus = dataMoveDao
+				.replicateCollectionFromStagToProd("OrdersPipeLine",
+						ordersPipeLineList, OpenOrderPipeLine.class);
+		if (orderPipeLineStatus) {
+			replicationStatusMap.put("OrdersPipeLine", "SUCESS");
+		} else {
+			replicationStatusMap.put("OrdersPipeLine", "FAILURE");
+		}
+		boolean paAvPartFinalQtyStatus = dataMoveDao
+				.replicateCollectionFromStagToProd("PA_AvPartFinalQtyPer",
+						AvPartFinalQtyPerList, AvPartFinalQtyPer.class);
+		if (paAvPartFinalQtyStatus) {
+			replicationStatusMap.put("PA_AvPartFinalQtyPer", "SUCESS");
+		} else {
+			replicationStatusMap.put("PA_AvPartFinalQtyPer", "FAILURE");
+		}
+		boolean pnLtStatus = dataMoveDao.replicateCollectionFromStagToProd(
+				"PN_LT", PNLTList, PNLT.class);
+		if (pnLtStatus) {
+			replicationStatusMap.put("PN_LT", "SUCESS");
+		} else {
+			replicationStatusMap.put("PN_LT", "FAILURE");
+		}
+		boolean paFlexSuperBomStatus = dataMoveDao.replicateCollectionFromStagToProd(
+				"PA_FLEX_SUPER_BOM", paFlexsuperBomList, SkuBom.class);
+		if (paFlexSuperBomStatus) {
+			replicationStatusMap.put("PA_FLEX_SUPER_BOM", "SUCESS");
+		} else {
+			replicationStatusMap.put("PA_FLEX_SUPER_BOM", "FAILURE");
+		}
+		
+		boolean pipelineUploadStatus=dataMoveDao.replicatePaFlexSuperBomCollection();
+		if (pipelineUploadStatus) 
+		{
+			replicationStatusMap.put("PA_FLEX_SUPERBOM", "SUCESS");
+		} else 
+		{
+			replicationStatusMap.put("PA_FLEX_SUPERBOM", "FAILURE");
+		}*/
+		
+		return replicationStatusMap;
+	}
+
+	public boolean getIntendedBomUpdateStatus() 
+	{
+		BomStatus bomStatus=dataMoveDao.getBomUpdateStatus();
+		if(bomStatus==null)
+		{
+			return false;
+		}
+		else
+		{
+			return bomStatus.isCollectionUpdatedStatus();
+		}
+	}
+
+	public void updateIntendedBom() 
+	{
+		BomStatus bomStatus=new BomStatus();
+		bomStatus.setCollection("MASTER_BOM_FLEX");
+		bomStatus.setCollectionUpdatedStatus(false);
+		dataMoveDao.updateBomStatus(bomStatus);
+		
+	}
+}
