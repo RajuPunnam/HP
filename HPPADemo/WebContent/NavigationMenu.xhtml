@@ -1,0 +1,205 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<meta charset="utf-8" />
+	<meta name="description" content="" />
+	<meta name="author" content="" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="viewport"
+		content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="yes" />
+
+	<title>hp CLEVER CHECK</title>
+	<!-- theme fonts -->
+	<link href="resources/assets/bootstrap/css/bootstrap.min.css"
+		rel="stylesheet" />
+	<link href="resources/assets/font-awesome/css/font-awesome.min.css"
+		rel="stylesheet" />
+	<link href="resources/css/app.css" rel="stylesheet" />
+	<script src="resources/js/checkout.js"></script>
+</h:head>
+
+<style>
+body {
+	margin: 0px;
+	padding: 0px;
+	background-color: #00345e;
+	/* For browsers that do not support gradients */
+	background: -webkit-linear-gradient(#00345e, #508bbf);
+	/* For Safari 5.1 to 6.0 */
+	background: -o-linear-gradient(#00345e, #508bbf);
+	/* For Opera 11.1 to 12.0 */
+	background: -moz-linear-gradient(#00345e, #508bbf);
+	/* For Firefox 3.6 to 15 */
+	background: linear-gradient(#00345e, #508bbf); /* Standard syntax */
+}
+
+.ui-icon {
+	display: none !important;
+}
+
+.ui-accordion-header {
+	height: 68px;
+	font-weight: normal;
+	text-decoration: none;
+	color: #fff;
+	font-size: 14px;
+	background-color: #316796 !important;
+	border-top: 1px solid #18568C;
+	line-height: 55px;
+	text-align: center;
+	box-shadow: inset 0px 0px 0px #fff;
+	padding: 0.5em 2.5em 0.5em 2.2em !important;
+}
+
+.ui-state-default, .ui-widget-content .ui-state-default,
+	.ui-widget-header .ui-state-default {
+	background: #316796 !important;
+}
+
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover,
+	.ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus
+	{
+	background: #316796 !important;
+}
+
+.nav-side-menu {
+	height: 50%;
+}
+
+.buttn {
+	height: 100%;
+	width: 100%;
+	background-color: #316796 !important;
+	border: 1px solid #316796;
+	-webkit-box-shadow: none !important;
+	box-shadow: none !important;
+	color: #fff;
+}
+
+.ui-accordion .ui-accordion-content {
+	padding: 1em 3.2em;
+}
+</style>
+<h:body style="background-color: #316796">
+	<ui:insert>
+		<ui:include src="/WEB-INF/include/mobileHeaderTemplate.xhtml"></ui:include>
+	</ui:insert>
+
+	<h:form>
+		<h:panelGrid columns="1" style="width:100%; margin-top: -13px;">
+			<p:commandButton styleClass="buttn fa fa-angle-down fa-lg" value="" style="margin-bottom:-3px;height: 35px;line-height: 32px;"
+				action="search.html">
+			</p:commandButton>
+			<p:accordionPanel activeIndex="null">
+
+				<p:tab title="BUSINESS NOTEBOOKS" >
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.bnbcount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="BNB" />
+					</h:commandLink>
+					<ui:repeat var="bnb" action="#{homeBean.home}"
+						value="#{homeBean.bnbfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="bnb"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{bnb.skuid}  (#{bnb.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{bnb.skuid}" />
+								<f:param name="bu" value="BNB" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+				<p:tab title="CONSUMER NOTEBOOK">
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.cnbcount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="CNB" />
+					</h:commandLink>
+					<ui:repeat var="cnb" action="#{homeBean.home}"
+						value="#{homeBean.cnbfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="cnb"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{cnb.skuid}  (#{cnb.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{cnb.skuid}" />
+								<f:param name="bu" value="CNB" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+				<p:tab title="BUSINESS PC">
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.bpccount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="BPC" />
+					</h:commandLink>
+					<ui:repeat var="bpc" action="#{homeBean.home}"
+						value="#{homeBean.bpcfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="bpc"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{bpc.skuid}  (#{bpc.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{bpc.skuid}" />
+								<f:param name="bu" value="BPC" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+				<p:tab title="CONSUMER PC">
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.cpccount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="CPC" />
+					</h:commandLink>
+					<ui:repeat var="cpc" action="#{homeBean.home}"
+						value="#{homeBean.cpcfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="cpc"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{cpc.skuid}  (#{cpc.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{cpc.skuid}" />
+								<f:param name="bu" value="CPC" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+				<p:tab title="WORKSTATIONS">
+					<h:commandLink action="searchResults.xhtml?faces-redirect=true"
+						value="Overall - #{homeBean.wscount}"
+						actionListener="#{homeBean.overallButton}"
+						style="line-height: 2.3; font-weight:bold;font-size: 16px;">
+						<f:param name="bu" value="WST" />
+					</h:commandLink>
+					<ui:repeat var="wst" action="#{homeBean.home}"
+						value="#{homeBean.wstfamily}" varStatus="status">
+						<li class="bnt"><h:commandLink id="wst"
+								action="searchResults.xhtml?faces-redirect=true"
+								actionListener="#{homeBean.buttonAction}"
+								value="#{wst.skuid}  (#{wst.count})"
+								style="line-height: 2.3;color: #000;font-size:14px;">
+								<f:param name="family" value="#{wst.skuid}" />
+								<f:param name="bu" value="WST" />
+							</h:commandLink></li>
+					</ui:repeat>
+				</p:tab>
+			</p:accordionPanel>
+		</h:panelGrid>
+	</h:form>
+	<script type="text/javascript"
+		src="resources/assets/bootstrap/js/bootstrap.min.js"></script>
+</h:body>
+</html>
+
+
+

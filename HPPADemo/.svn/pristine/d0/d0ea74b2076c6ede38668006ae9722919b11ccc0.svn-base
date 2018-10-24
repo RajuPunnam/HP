@@ -1,0 +1,70 @@
+package com.techouts.services;
+
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.techouts.pojo.CartItems;
+import com.techouts.re.services.SkuAvalibility;
+
+@Service
+@Path("/cache")
+public class Resource {
+
+	@Autowired
+	private CacheService cacheService;
+	@Autowired
+	private SkuAvalibility skuAvalibility;
+	
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	@Path("/refresh")
+	public Response refresh(){
+		System.out.println("Cache Refreshing");
+		cacheService.service();
+		System.out.println("Cache Refreshed");
+		for(CartItems s:cacheService.getAllUsersCart()){
+			System.out.println(s);
+		}
+		return  Response.ok("Cache Refreshed Successfully").build();
+	}
+	
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	@Path("/dataRefreshWithBom")
+	public Response dataRefreshWithBom(){
+		try{
+			skuAvalibility.generateFinalQty();	
+			skuAvalibility.createPipeLineCollection();
+			skuAvalibility.generateSkuAvilability(true);
+			cacheService.service();
+		}catch(Exception e){
+			return Response.ok(e.toString()).build();
+		}
+		return  Response.ok("Data recaliculated sucessfully BOM").build();
+	}
+	
+	
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	@Path("/dataRefresh")
+	public Response dataRefresh(){
+		try{
+			skuAvalibility.createPipeLineCollection();
+			skuAvalibility.generateSkuAvilability(true);
+			cacheService.service();
+		}catch(Exception e){
+			return Response.ok(e.toString()).build();
+		}
+		return  Response.ok("Data sucessfully recaliculated").build();
+	}
+	
+	
+	
+}

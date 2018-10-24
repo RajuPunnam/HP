@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>hp CLEVER CHECK</title>
+	<!-- theme fonts -->
+    <link href="Resources/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="Resources/assets/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="Resources/app/css/app.css" rel="stylesheet"/>
+
+<script type="text/javascript">
+		
+		function loginFormSubmit(){			
+			var status=false;
+			 //alert("form submit()");
+			 var mailid=$("#username").val();
+			/*  alert("mail id  :"+mailid); */
+			 if(mailid!=""){				
+				var mailidpattern=/[a-zA-Z]+\.[a-zA-Z]+@(hp)\.(com)/;
+				//alert("returned value of patern--------"+mailidpattern.test(mailid));				
+					if(mailidpattern.test(mailid)){
+					$("#mailidErrorMessage").html("");
+					 var pword=$("#password").val();
+					/*  alert("password  :"+pword); */
+					if(pword!=""){
+						status=true;
+						}
+					else{	//alert("indide password else");
+						
+						$("#passwordErrorMessage").html("invalid password");
+						$("#password").focus();
+					
+					}//password
+					 
+						
+					}
+					else{
+						//alert("indide mailid else");
+						$("#passwordErrorMessage").html("");
+						$("#mailidErrorMessage").html("invalid mailid");
+						$("#username").focus();	
+					
+					}
+					
+								
+			 }
+			 else{	
+				 $("#passwordErrorMessage").html("");
+				 $("#mailidErrorMessage").html("invalid mailid");
+				 $("#username").focus();	
+				
+			 }//mailid
+			 
+			
+			 
+			 
+			
+		if(status){
+				
+			/* alert("====== inside j_spring_security========="); */
+			var pname = location.pathname.split("/");
+			document.getElementById("form").action = "/"+pname[1]+"/j_spring_security_check"
+			document.getElementById("form").submit();
+		}
+		else{
+			return false;
+		}
+			
+			 
+			 
+		}
+		</script>
+		</head>
+<style>
+	
+</style>
+<body>
+
+	<div style="height: 55px;background-color: #037CD5;width: 100%;">
+		<div class="container">
+			<div style="padding-top: 9px;">
+				<img src="Resources/app/images/hp.png">
+			</div>
+		</div>
+	</div>
+	<div style="height: 40px;background-color: #006cb4;width: 100%;"></div>
+	
+    <div id="content-body">
+		<div class="container">
+			<div class="row">
+				<div class="col-xs-12">
+					<div class="row"  style="margin-top: 50px;">
+						<div class="col-lg-5" style="margin-top: 70px;">
+							<!-- added by ravi  -->
+							<form id="form" action="" method="POST">
+							 <span id="mailidErrorMessage">   </span> 
+				             <span id="passwordErrorMessage">  </span>
+								<div class="form-group">
+									<input name="username" id="username" type="text" class="form-control input-lg text-md" placeholder="Enter email / mobile">
+								</div>
+								<div class="form-group mt-25">
+									<input name="password" id="password"  type="password"  class="form-control input-lg text-md" placeholder="Enter password">
+								</div>
+								<div class="form-group" style="margin-top: 30px;">
+								<button onclick="loginFormSubmit(); return false;" class="btn btn-custom1" >LOGIN</button>									
+									<!-- <a href="home.html" class="btn btn-custom1">LOGIN</a> -->
+									
+									<a class="loin-fp" href="TempChangePassword.xhtml">
+		                       Forgot Password ?
+		                    </a>
+									<!-- <a href="home.html" class="loin-fp">forgot password ?</a> -->
+								</div>
+								<div class="form-group" style="color: #8A8A8A;margin-top: 20px;">
+									New to hp cleverchek ? <a href="Signup.xhtml" class="text-custom1" style="font-weight: 600;"> Signup</a>
+								</div>
+							</form>
+						</div>
+						<div class="clearfix col-lg-2" style="padding-left: 90px;">
+							<img alt="" src="Resources/app/images/line-divider.png" style="height: 430px;">
+						</div>
+						<div align="left" class="col-lg-5">
+							<div>
+								<img src="Resources/app/images/systems.png" style="width: 190px;">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+   	</div>
+    <script type="text/javascript" src="Resources/assets/jquery/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="Resources/assets/bootstrap/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+
+

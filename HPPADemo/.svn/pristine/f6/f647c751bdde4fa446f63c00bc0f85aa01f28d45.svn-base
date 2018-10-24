@@ -1,0 +1,23 @@
+package com.techouts.util;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.slf4j.bridge.SLF4JBridgeHandler;
+
+public class MyLogListener implements ServletContextListener {
+    
+
+    	public void contextInitialized(ServletContextEvent sce) {
+		System.out.println("MyLogListener.contextInitialized()");
+		
+		SLF4JBridgeHandler.removeHandlersForRootLogger();
+		SLF4JBridgeHandler.install();
+		
+	}
+
+	public void contextDestroyed(ServletContextEvent arg) {
+		System.out.println("MyLogListener.contextDestroyed()");
+	}
+
+}

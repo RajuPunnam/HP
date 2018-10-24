@@ -1,0 +1,454 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<meta charset="utf-8" />
+
+
+	<title>hp CLEVER CHECK</title>
+	<!-- theme fonts -->
+	<link
+		href="//db.onlinewebfonts.com/c/4b985369d1883e0219184ffb89bac7b6?family=Night+Train+382"
+		rel="stylesheet" type="text" />
+	<link href="Resources/assets/bootstrap/css/bootstrap.min.css"
+		rel="stylesheet" />
+	<link href="Resources/css/hpfonts.css" rel="stylesheet" />
+	<link href="Resources/assets/font-awesome/css/font-awesome.min.css"
+		rel="stylesheet" />
+	<link href="Resources/app/css/app.css" rel="stylesheet" />
+	<link href="Resources/app/css/yamm.css" rel="stylesheet" />
+	<script type="text/javascript"
+		src="Resources/assets/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="Resources/js/tableHeadFixer.js"></script>
+</h:head>
+
+<style>
+.nop {
+	padding: 0;
+}
+
+.search_btn {
+	margin: 2px 5px 0px 5px;
+	float: left;
+	background: #fff;
+	border: none;
+	text-align: left;
+	padding-left: 0;
+}
+
+.text_btn {
+	line-height: 32px;
+	margin: 0;
+}
+
+#home .ui-corner-all {
+	-moz-border-radius: 0px;
+	-webkit-border-radius: 0px;
+	border-radius: 0px;
+}
+
+.ui-btn {
+	height: 27px;
+	margin: -4px -5px 0px -5px;
+	background: white;
+	border: none;
+}
+
+#feedback a {
+	background-color: white;
+	border: white;
+}
+
+.removeAll {
+	background: #d95250;
+	width: 100%;
+	height: 30px;
+	color: #fff;
+	text-shadow: none;
+	border: none;
+	box-shadow: none;
+}
+
+#cross {
+	display: none;
+}
+
+#feedback .shortHover:hover #cross {
+	display: inline-block;
+	position: absolute;
+}
+
+.shortHover:hover {
+	background: #000;
+	position: relative;
+}
+
+.all {
+	background: #eee;
+	width: 100%;
+	font-size: 13px;
+	padding: 6px 0px 6px 8px;
+}
+
+.tbt_compare td {
+	padding: 5px;
+	border: 1px solid #ccc !important;
+	font-size: 11px;
+	vertical-align: top;
+}
+
+.tbt_compare tr:nth-child(even) {
+	background: #dbe7f7
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+#parent {
+	height: 500px;
+}
+
+.top_title {
+	float: left;
+	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#308de8+0,006de0+100 */
+	background: #308de8; /* Old browsers */
+	background: -moz-linear-gradient(top, #308de8 0%, #006de0 100%);
+	/* FF3.6-15 */
+	background: -webkit-linear-gradient(top, #308de8 0%, #006de0 100%);
+	/* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, #308de8 0%, #006de0 100%);
+	/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#308de8',
+		endColorstr='#006de0', GradientType=0); /* IE6-9 */
+	border-radius: 5px;
+	text-align: center;
+	color: #fff;
+	padding: 5px 8px;
+	margin: 2px;
+	font-weight: bold;
+	font-size: 15px;
+}
+
+.top_title.green {
+	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#299a0b+0,0a5606+100;Green+Flat+%231 */
+	background: #299a0b; /* Old browsers */
+	background: -moz-linear-gradient(top, #299a0b 0%, #0a5606 100%);
+	/* FF3.6-15 */
+	background: -webkit-linear-gradient(top, #299a0b 0%, #0a5606 100%);
+	/* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, #299a0b 0%, #0a5606 100%);
+	/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#299a0b',
+		endColorstr='#0a5606', GradientType=0); /* IE6-9 */
+}
+
+.box42 {
+	width: 42px;
+}
+
+.center {
+	display: table;
+	margin: 0 auto;
+}
+
+.table_img tbody tr:nth-child(odd) {
+	background: #fafaff;
+}
+
+.table_img tbody td {
+	border: 1px solid #e1f2fb !important;
+	vertical-align: top;
+}
+
+.table_img tr td:first-child img {
+	float: left;
+	margin-right: 5px;
+}
+
+.table_img tr td:first-child span {
+	float: left;
+}
+
+.table_img .hilated:hover {
+	background: #effcea !important;
+}
+</style>
+<script>
+	$(document).ready(function() {
+		$("#fixTable").tableHeadFixer({
+			"left" : 2
+		});
+	});
+</script>
+
+<h:body style="font-family:Arial">
+	<ui:insert name="header">
+		<ui:include src="/WEB-INF/include/disheaderTemplate.xhtml" />
+	</ui:insert>
+
+	<h:form style="padding-top:100px;" id="home">
+		<h:panelGroup rendered="#{homeBean.skuSimilarity == 'false'}">
+			<div class="clearfix">
+
+				<div class="container">
+					<div class="row">
+						<div
+							style="width: 58.3333%; border: 1px solid #30658f; display: table; margin: 20% auto 0; height: 30px;">
+							<div class="col-xs-1 nop">
+								<span class="input-group-addon search_btn" id="basic-addon1">
+									<i class="fa fa-search"></i>
+								</span>
+							</div>
+							<div class="col-xs-8 nop text_btn" style="margin-left: -29px;">
+
+								<p:autoComplete id="autocomplete"
+									placeholder="So, what are you wishing for today?"
+									value="#{homeBean.searchedDisSku}"
+									completeMethod="#{homeBean.getDisSkus}" scrollHeight="300" />
+							</div>
+							<div class="col-xs-3 nop pull-right">
+								<h:commandButton id="search" styleClass="search" value="SEARCH"
+									action="dishome.xhtlm?faces-redirect=true"
+									actionListener="#{homeBean.disSearch}" />
+							</div>
+						</div>
+
+					</div>
+
+				</div>
+			</div>
+		</h:panelGroup>
+		<c:if
+			test="#{(homeBean.skuSimilarity == 'false') and  (homeBean.selectedDisSku != null)}">
+			<h:panelGroup
+				rendered="#{(homeBean.skuSimilarity == 'false') and  (homeBean.selectedDisSku != null)}">
+				<div>
+				<BR /><BR />
+					<div class="center" style="font-weight: bold; font-size: 24px;">SKU NOT FOUND</div>
+				</div>
+			</h:panelGroup>
+		</c:if>
+		<c:if test="#{homeBean.skuSimilarity == 'true'}">
+			<h:panelGroup rendered="#{homeBean.skuSimilarity == 'true'}">
+				<div id="parent">
+					<table class="table table_img" id="fixTable">
+						<thead>
+							<tr>
+								<td width="100px"><div style="width: 160px">
+										<div class="center">
+											<div class="top_title green">
+												<h:outputText id="bu" value="#{homeBean.selectedDisSku.bu}"
+													escape="false" />
+											</div>
+											<div class="top_title green">
+												<h:outputText id="family"
+													value="#{homeBean.selectedDisSku.family}" escape="false" />
+											</div>
+										</div>
+									</div></td>
+								<td>
+									<div style="width: 280px">
+										<div class="center">
+											<div class="top_title box42 green">
+												<h:graphicImage
+													url="Resources\images\icons\icon_6_white.png" width="100%"
+													rendered="#{homeBean.selectedDisSku.bu == 'BNB' || homeBean.selectedDisSku.bu == 'CNB'}" />
+												<h:graphicImage
+													url="Resources\images\icons\icon_8_white.png" width="100%"
+													rendered="#{homeBean.selectedDisSku.bu == 'BPC' || homeBean.selectedDisSku.bu == 'CPC'}" />
+												<h:graphicImage
+													url="Resources\images\icons\icon_7_white.png" width="100%"
+													rendered="#{homeBean.selectedDisSku.bu == 'WST'}" />
+											</div>
+											<div class="top_title green">
+												<h:outputText id="orgsku"
+													value="#{homeBean.selectedDisSku.skuId}" escape="false" />
+											</div>
+											<h:commandLink
+												action="#{homeBean.downloadOrgSku(homeBean.selectedDisSku)}">
+												<div class="top_title box42 green" style="height: 32px">
+													<h:graphicImage
+														url="Resources\images\icons\Download-icon.png"
+														width="100%" />
+												</div>
+											</h:commandLink>
+										</div>
+									</div>
+								</td>
+								<ui:repeat
+									value="#{homeBean.skuSimilarityMap.entrySet().toArray()}"
+									var="entry">
+									<td class="hilated">
+										<div style="width: 280px">
+											<div class="center">
+												<h:commandLink actionListener="#{homeBean.disListener}"
+													action="dishome.xhtml?faces-redirect=true">
+													<f:attribute name="skuId" value="#{entry.key}" />
+													<div class="top_title box42">
+														<h:graphicImage
+															url="Resources\images\icons\icon_6_white.png"
+															width="100%"
+															rendered="#{homeBean.selectedDisSku.bu == 'BNB' || homeBean.selectedDisSku.bu == 'CNB'}" />
+														<h:graphicImage
+															url="Resources\images\icons\icon_8_white.png"
+															width="100%"
+															rendered="#{homeBean.selectedDisSku.bu == 'BPC' || homeBean.selectedDisSku.bu == 'CPC'}" />
+														<h:graphicImage
+															url="Resources\images\icons\icon_7_white.png"
+															width="100%"
+															rendered="#{homeBean.selectedDisSku.bu == 'WST'}" />
+													</div>
+													<div class="top_title">
+														<h:outputText id="similarsku" value="#{entry.key}"
+															escape="false" />
+													</div>
+													<div class="top_title">
+														<h:outputText value="#{entry.value}">
+															<f:convertNumber type="percent" />
+														</h:outputText>
+													</div>
+												</h:commandLink>
+												<h:commandLink action="#{homeBean.download(entry.key)}">
+													<div class="top_title box42" style="height: 32px">
+														<h:graphicImage
+															url="Resources\images\icons\Download-icon.png"
+															width="100%" />
+													</div>
+												</h:commandLink>
+											</div>
+										</div>
+									</td>
+								</ui:repeat>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><img src="Resources\images\icons\processor.png"
+									width="24px" /> <span
+									style="font-weight: bold; font-size: 14px;">PROCESSOR</span></td>
+								<td><h:outputText id="proc"
+										value="#{homeBean.selectedDisSku.configurations.get(0)}"
+										escape="false" style="font-weight:bold" /></td>
+								<ui:repeat
+									value="#{homeBean.skuSimilarityMap.entrySet().toArray()}"
+									var="entry">
+									<td><h:outputText id="processor"
+											value="#{homeBean.skuAvTableData.get(entry.key).get(0)}"
+											escape="false" /></td>
+								</ui:repeat>
+							</tr>
+							<tr>
+								<td><img src="Resources\images\icons\memory.png"
+									width="24px" style="margin-top: 4px;" /> <span
+									style="font-weight: bold; font-size: 14px;">MEMORY</span></td>
+								<td><h:outputText id="mem"
+										value="#{homeBean.selectedDisSku.configurations.get(1)}"
+										escape="false" style="font-weight:bold" /></td>
+								<ui:repeat
+									value="#{homeBean.skuSimilarityMap.entrySet().toArray()}"
+									var="entry">
+									<td><h:outputText id="memory"
+											value="#{homeBean.skuAvTableData.get(entry.key).get(1)}"
+											escape="false" /></td>
+								</ui:repeat>
+							</tr>
+							<tr>
+								<td><img src="Resources\images\icons\storage.png"
+									width="24px" /> <span
+									style="font-weight: bold; font-size: 14px;">STORAGE</span></td>
+								<td><h:outputText id="stor"
+										value="#{homeBean.selectedDisSku.configurations.get(2)}"
+										escape="false" style="font-weight:bold" /></td>
+								<ui:repeat
+									value="#{homeBean.skuSimilarityMap.entrySet().toArray()}"
+									var="entry">
+									<td><h:outputText id="storage"
+											value="#{homeBean.skuAvTableData.get(entry.key).get(2)}"
+											escape="false" /></td>
+								</ui:repeat>
+							</tr>
+							<tr>
+								<td><img src="Resources\images\icons\screen.png"
+									width="24px" /> <span
+									style="font-weight: bold; font-size: 14px;">SCREEN</span></td>
+								<td><h:outputText id="scr"
+										value="#{homeBean.selectedDisSku.configurations.get(3)}"
+										escape="false" style="font-weight:bold" /></td>
+								<ui:repeat
+									value="#{homeBean.skuSimilarityMap.entrySet().toArray()}"
+									var="entry">
+									<td><h:outputText id="screen"
+											value="#{homeBean.skuAvTableData.get(entry.key).get(3)}"
+											escape="false" /></td>
+								</ui:repeat>
+							</tr>
+							<tr>
+								<td><img src="Resources\images\icons\battery.png"
+									width="24px" style="margin-top: 4px;" /> <span
+									style="font-weight: bold; font-size: 14px;">POWER SUPPLY</span></td>
+								<td><h:outputText id="os"
+										value="#{homeBean.selectedDisSku.configurations.get(4)}"
+										escape="false" style="font-weight:bold" /></td>
+								<ui:repeat
+									value="#{homeBean.skuSimilarityMap.entrySet().toArray()}"
+									var="entry">
+									<td><h:outputText id="os1"
+											value="#{homeBean.skuAvTableData.get(entry.key).get(4)}"
+											escape="false" /></td>
+								</ui:repeat>
+							</tr>
+							<tr>
+								<td><img src="Resources\images\icons\os.png" width="24px" />
+									<span style="font-weight: bold; font-size: 14px;">OS</span></td>
+								<td><h:outputText id="batt"
+										value="#{homeBean.selectedDisSku.configurations.get(5)}"
+										escape="false" style="font-weight:bold" /></td>
+								<ui:repeat
+									value="#{homeBean.skuSimilarityMap.entrySet().toArray()}"
+									var="entry">
+									<td><h:outputText id="battery"
+											value="#{homeBean.skuAvTableData.get(entry.key).get(5)}"
+											escape="false" /></td>
+								</ui:repeat>
+							</tr>
+							<tr>
+								<td><img src="Resources\images\icons\others.png"
+									width="24px" /> <span
+									style="font-weight: bold; font-size: 14px;">OTHERS</span></td>
+								<td><ui:repeat var="av" varStatus="repeatStatus"
+										value="#{homeBean.selectedDisSku.configurations}">
+										<h:outputText rendered="#{repeatStatus.index gt 5}" id="othav"
+											value="#{av}" escape="false" style="font-weight:bold" />
+										<h:outputText rendered="#{repeatStatus.index gt 5}"
+											id="htmlBreak" value="&lt;br/&gt;" escape="false" />
+									</ui:repeat></td>
+								<ui:repeat
+									value="#{homeBean.skuSimilarityMap.entrySet().toArray()}"
+									var="entry">
+									<td><ui:repeat var="av" varStatus="repeatStatus"
+											value="#{homeBean.skuAvTableData.get(entry.key)}">
+											<h:outputText rendered="#{repeatStatus.index gt 5}"
+												id="othersav" value="#{av}" escape="false" />
+											<h:outputText rendered="#{repeatStatus.index gt 5}"
+												id="htmlBreak" value="&lt;br/&gt;" escape="false" />
+										</ui:repeat></td>
+								</ui:repeat>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</h:panelGroup>
+		</c:if>
+	</h:form>
+</h:body>
+
+</html>
+
+
+
